@@ -109,7 +109,9 @@ struct AboutMeView: View {
                                          
                                          let mailComposer = MailComposer()
                                          mailComposer.mailComposeDelegate = mailComposer
-                                         
+
+                                         mailComposer.setToRecipients(["fischer@p-f.consulting"])
+
                                          if let topViewController = UIApplication.shared.windows.first?.rootViewController?.presentedViewController {
                                              topViewController.present(mailComposer, animated: true, completion: nil)
                                          }
@@ -188,7 +190,7 @@ struct AboutMeView: View {
                  TileDetailsView(title: "About me"){
                      VStack {
                          VStack {
-                             Text("Hi there! I'm Pascal Fischer,\n\na passionate software developer and consultant with years of experience in the industry. I've been programming since the young age of 11, fueling my deep passion and expertise in the field.\n\nI have successfully delivered a wide range of projects for diverse clients. With my wealth of knowledge and technical skills, I can provide strategic guidance and deliver innovative solutions that drive business growth. \n\nWith a keen eye for detail and a deep understanding of user experience, I specialize in designing and developing websites and applications that not only look great but also provide a seamless and intuitive user interface. I strive to create digital experiences that leave a lasting impact.\n\nWhen I'm not crafting code, you'll find me exploring the world through my camera lens. Photography is not just a hobby for me; it's a way to express my creativity and document the beauty around us.\n\nWith my years of experience, a strong commitment to professionalism, and a dedication to exceeding client expectations, I'm ready to take on new challenges and help you achieve your goals.\n\nLet's bring your ideas to life.").fontWeight(.semibold).padding(10.0).padding(.vertical, 5.0)
+                             Text("Hi there! I'm Pascal Fischer,\n\na passionate software developer and consultant with years of experience in the industry. I've been programming since the young age of 11, fueling my deep passion and expertise in the field.\n\nI have successfully delivered a wide range of projects for diverse clients. With my wealth of knowledge and technical skills, I can provide strategic guidance and deliver innovative solutions that drive business growth. \n\nWith a keen eye for detail and a deep understanding of user experience, I specialize in designing and developing websites and applications that not only look great but also provide a seamless and intuitive user interface. I strive to create digital experiences that leave a lasting impact.\n\nWhen I'm not crafting code, you'll find me exploring the world through my camera lens. Photography is not just a hobby for me; it's a way to express my creativity and document the beauty around us.\n\nWith my experience and a dedication to exceeding client expectations, I'm ready to take on new challenges and help you achieve your goals.\n\nLet's bring your ideas to life.").fontWeight(.semibold).padding(10.0).padding(.vertical, 5.0)
                          }
                          .padding(.horizontal, 7.0)
 
