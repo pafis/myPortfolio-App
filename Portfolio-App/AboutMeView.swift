@@ -109,7 +109,9 @@ struct AboutMeView: View {
                                          
                                          let mailComposer = MailComposer()
                                          mailComposer.mailComposeDelegate = mailComposer
+
                                          mailComposer.setToRecipients(["fischer@p-f.consulting"])
+
                                          if let topViewController = UIApplication.shared.windows.first?.rootViewController?.presentedViewController {
                                              topViewController.present(mailComposer, animated: true, completion: nil)
                                          }
