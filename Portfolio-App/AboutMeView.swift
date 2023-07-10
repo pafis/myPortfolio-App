@@ -10,7 +10,6 @@ import SafariServices
 import SwiftUI
 
 /// This is the About Me View
-/// A view that displays information about me.
 struct AboutMeView: View {
     // State variable to hold the result of sending an email
     @State var result: Result<MFMailComposeResult, Error>? = nil
