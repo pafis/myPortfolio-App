@@ -8,11 +8,15 @@
 import SwiftUI
 
 /// This is the Imprint View
+import SwiftUI
+
+/// This is the Imprint View
 struct ImprintView: View {
+    /// The current view binding
     @Binding var currentView: Info.InfoNavigationEnum
-    
+
     var body: some View {
-        VStack (alignment: .leading) {
+        VStack(alignment: .leading) {
             HStack {
                 Button(action: {
                     withAnimation {
@@ -24,22 +28,17 @@ struct ImprintView: View {
                 }
                 .padding()
                 .foregroundColor(.primary)
-                
+
             }.padding(.bottom, 5)
-            TileDetailsView(title:"Imprint")
-            {
+            TileDetailsView(title: "Imprint") {
                 let licenseText = try? NSAttributedString(url: Bundle.main.url(forResource: "Imprint", withExtension: "rtf")!, options: [:], documentAttributes: nil)
-                        
+
                 let convertedAttrString = try? AttributedString(licenseText ?? NSAttributedString(string: ""), including: \.uiKit)
-          
-                Text(convertedAttrString ?? "").padding(10)
-               
-               
-                   
             }
         }
     }
 }
-#Preview{
+
+#Preview {
     ImprintView(currentView: Info().$currentView)
 }

@@ -7,9 +7,17 @@
 
 import Foundation
 
-struct ProgressSkill
-{   let id = UUID()
-    var name:String
+/// A struct that represents a progress skill.
+struct ProgressSkill {
+    /// The unique identifier of the progress skill.
+    let id = UUID()
+
+    /// The name of the progress skill.
+    var name: String
+
+    /// The progress of the progress skill, represented as a percentage.
     var progress: CGFloat
-    var strokeLineWidth:CGFloat = 10
+
+    /// The width of the stroke line used to draw the progress skill.
+    var strokeLineWidth: CGFloat = 10
 }

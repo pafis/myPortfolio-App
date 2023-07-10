@@ -7,8 +7,14 @@
 
 import Foundation
 
+/// A struct that represents a service item.
 struct ServicesItem: Hashable {
-let title:String
-let icon:String
-let text:String
+    /// The title of the service item.
+    let title: String
+
+    /// The name of the icon used to represent the service item.
+    let icon: String
+
+    /// The text displayed in the service item.
+    let text: String
 }
