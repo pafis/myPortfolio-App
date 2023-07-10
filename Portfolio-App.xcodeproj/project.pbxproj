@@ -178,6 +178,8 @@
 			dependencies = (
 			);
 			name = "Portfolio-App";
+			packageProductDependencies = (
+			);
 			productName = "Portfolio-App";
 			productReference = 0CCBF7442A3C645B00CCD315 /* Portfolio-App.app */;
 			productType = "com.apple.product-type.application";
@@ -206,6 +208,8 @@
 				Base,
 			);
 			mainGroup = 0CCBF73B2A3C645B00CCD315;
+			packageReferences = (
+			);
 			productRefGroup = 0CCBF7452A3C645B00CCD315 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";

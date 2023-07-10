@@ -7,11 +7,18 @@
 
 import SwiftUI
 
+// Define a struct called Ball
 struct Ball {
+    // The level of the ball
     let level: Int
+    // The name of the ball
     let name: String
+    // The view of the ball
     let view: AnyView
-    let image:UIImage
+    // The image of the ball
+    let image: UIImage
+    // The size of the text on the ball
     let textSize: CGFloat
-    var color:UIColor?
+    // The color of the ball, which can be nil if it hasn't been assigned yet
+    var color: UIColor?
 }

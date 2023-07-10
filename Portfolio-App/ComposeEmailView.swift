@@ -4,16 +4,12 @@
 //
 //  Created by Pascal Fischer on 26.06.23.
 //
-import SwiftUI
 import MessageUI
-
+import SwiftUI
 
 /// This is a helper class for writing emails
-class MailComposer: MFMailComposeViewController, MFMailComposeViewControllerDelegate{
-    
-    func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
+class MailComposer: MFMailComposeViewController, MFMailComposeViewControllerDelegate {
+    func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith _: MFMailComposeResult, error _: Error?) {
         controller.dismiss(animated: true)
     }
-
 }
-

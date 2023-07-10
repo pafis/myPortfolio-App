@@ -7,16 +7,16 @@
 
 import SwiftUI
 
-
-/// This is the VersionView
+/// A view that displays the version and build number of the app.
 struct VersionView: View {
+    /// The current view state.
     @Binding var currentView: Info.InfoNavigationEnum
-    
+
     var body: some View {
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
-            let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
-            
-        VStack (alignment: .leading) {
+        let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
+
+        VStack(alignment: .leading) {
             HStack {
                 Button(action: {
                     withAnimation {
@@ -28,27 +28,26 @@ struct VersionView: View {
                 }
                 .padding()
                 .foregroundColor(.primary)
-                
+
             }.padding(.bottom, 5)
-            TileDetailsView(title:"Version")
-            {
-                VStack
-                {
+            TileDetailsView(title: "Version") {
+                VStack {
                     HStack {
                         Text("Version \(appVersion)")
                         Spacer()
                     }.padding(5)
-                   Divider()
+                    Divider()
                     HStack {
                         Text("Build \(buildNumber)")
                         Spacer()
                     }.padding(5)
                 }.padding(10)
-      
-            }.frame(height: /*@START_MENU_TOKEN@*/100/*@END_MENU_TOKEN@*/)
+
+            }.frame(height: 100)
         }
     }
 }
-#Preview{
+
+#Preview {
     VersionView(currentView: Info().$currentView)
 }

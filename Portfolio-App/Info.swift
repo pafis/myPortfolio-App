@@ -7,20 +7,25 @@
 
 import SwiftUI
 
+import SwiftUI
+
 /// This is the Info View
 struct Info: View {
+    /// The current view state
     @State var currentView: InfoNavigationEnum = .main
+
+    /// The possible views for the Info View
     enum InfoNavigationEnum {
         case main
         case licenses
         case imprint
         case version
     }
+
     var body: some View {
         ScrollView {
-            StickyHeader ()
-            {
-                ZStack{
+            StickyHeader {
+                ZStack {
                     Image(.infoHeader)
                         .renderingMode(.original)
                         .resizable(resizingMode: .stretch)
@@ -31,22 +36,20 @@ struct Info: View {
                         .fontWeight(.bold)
                         .foregroundColor(Color.black)
                         .padding(.top, 40)
-                    
                 }
             }
-            ZStack{
+            ZStack {
                 BackgroundView().blur(radius: 40)
                 LinearGradient(
                     gradient: Gradient(colors: [Color.primaryTile.opacity(0.9), Color.clear]),
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                VStack{
-                    if (currentView == .main)
-                    {
-                        TileDetailsView(title: "Info"){
-                            VStack{
-                                HStack{
+                VStack {
+                    if currentView == .main {
+                        TileDetailsView(title: "Info") {
+                            VStack {
+                                HStack {
                                     Text("Licenses")
                                     Spacer()
                                     Image(systemName: "chevron.right")
@@ -57,7 +60,7 @@ struct Info: View {
                                         }
                                     }
                                 Divider()
-                                HStack{
+                                HStack {
                                     Text("Imprint")
                                     Spacer()
                                     Image(systemName: "chevron.right")
@@ -68,7 +71,7 @@ struct Info: View {
                                         }
                                     }
                                 Divider()
-                                HStack{
+                                HStack {
                                     Text("Version")
                                     Spacer()
                                     Image(systemName: "chevron.right")
@@ -79,43 +82,33 @@ struct Info: View {
                                         }
                                     }
                             }.padding(10)
-                          
-                            
+
                         }.frame(height: 150)
-                        .padding(.top,30)
-                        
+                            .padding(.top, 30)
                     }
-                    if(currentView == .licenses)
-                    {  LicensesView(currentView: $currentView)
-                            .padding(.top,30)
-                            .transition(.move(edge: .trailing))
+                    if currentView == .licenses { LicensesView(currentView: $currentView)
+                        .padding(.top, 30)
+                        .transition(.move(edge: .trailing))
                     }
-                    if (currentView == .imprint)
-                    {  ImprintView(currentView: $currentView)
-                            .padding(.top,30)
-                            .transition(.move(edge: .trailing))
+                    if currentView == .imprint { ImprintView(currentView: $currentView)
+                        .padding(.top, 30)
+                        .transition(.move(edge: .trailing))
                     }
-                    if(currentView == .version)
-                    { VersionView(currentView: $currentView)
-                            .padding(.top,30)
-                            .transition(.move(edge: .trailing))
+                    if currentView == .version { VersionView(currentView: $currentView)
+                        .padding(.top, 30)
+                        .transition(.move(edge: .trailing))
                     }
                     Spacer()
                 }.frame(minHeight: 750)
                     .padding(.horizontal, 10)
-            
-                    
+
             }.clipShape(UnevenRoundedRectangle(cornerRadii: RectangleCornerRadii(topLeading: 30.0, topTrailing: 30.0)))
                 .padding(.top, -42.0)
                 .padding(.bottom, -30)
-               
-           
-            
+
         }.scrollIndicators(.hidden)
     }
 }
-
-
 
 #Preview {
     Info()
