@@ -10,7 +10,7 @@ import SafariServices
 import SwiftUI
 
 /// This is the About Me View
-/// A view that displays information about the author.
+/// A view that displays information about me.
 struct AboutMeView: View {
     // State variable to hold the result of sending an email
     @State var result: Result<MFMailComposeResult, Error>? = nil
@@ -52,12 +52,12 @@ struct AboutMeView: View {
                             HStack {
                                 // A vertical stack to hold the text content
                                 VStack {
-                                    // A typewriter text animation with the author's name
+                                    // A typewriter text animation with the my name
                                     TypewriterTextAnimation(text: "I'm Pascal Fischer")
                                         .font(.title)
                                         .foregroundColor(Color.white)
                                         .padding(.leading, 11.0)
-                                    // A text view with the author's title
+                                    // A text view with the my title
                                     Text("Developer | Consultant")
                                         .font(.caption)
                                         .foregroundColor(Color.gray)
@@ -97,7 +97,7 @@ struct AboutMeView: View {
                                                 .padding(5.0)
                                                 .frame(width: 70.0, height: 70.0)
                                         }.clipShape(Circle()).onTapGesture {
-                                            // When tapped, open the phone app with the author's phone number
+                                            // When tapped, open the phone app with the my phone number
                                             if let url = URL(string: "tel://\(+4_917_641_888_552)"), UIApplication.shared.canOpenURL(url) {
                                                 UIApplication.shared.open(url)
                                             }
@@ -110,7 +110,7 @@ struct AboutMeView: View {
                                                 .padding(5.0)
                                                 .frame(width: 70.0, height: 70.0)
                                         }.clipShape(Circle()).onTapGesture {
-                                            // When tapped, show the mail composer with the author's email address
+                                            // When tapped, show the mail composer with the my email address
                                             let mailComposer = MailComposer()
                                             mailComposer.mailComposeDelegate = mailComposer
                                             mailComposer.setToRecipients(["fischer@p-f.consulting"])
@@ -126,7 +126,7 @@ struct AboutMeView: View {
                                                 .padding(5.0)
                                                 .frame(width: 70.0, height: 70.0)
                                         }.clipShape(Circle()).onTapGesture {
-                                            // When tapped, open the author's website in Safari
+                                            // When tapped, open the my website in Safari
                                             if let url = URL(string: "https://p-f.consulting") {
                                                 let safariViewController = SFSafariViewController(url: url)
                                                 if let topViewController = UIApplication.shared.windows.first?.rootViewController?.presentedViewController {
@@ -143,7 +143,7 @@ struct AboutMeView: View {
                                                 .padding(5.0)
                                                 .frame(width: 70.0, height: 70.0)
                                         }.clipShape(Circle()).onTapGesture {
-                                            // When tapped, open the author's Xing profile
+                                            // When tapped, open the my Xing profile
                                             if let url = URL(string: "https://www.xing.com/profile/Pascal_Fischer104"), UIApplication.shared.canOpenURL(url) {
                                                 UIApplication.shared.open(url)
                                             }
@@ -157,7 +157,7 @@ struct AboutMeView: View {
                                                 .padding(5.0)
                                                 .frame(width: 70.0, height: 70.0)
                                         }.clipShape(Circle()).onTapGesture {
-                                            // When tapped, open the author's Instagram profile
+                                            // When tapped, open the my Instagram profile
                                             if let url = URL(string: "https://instagram.com/instaxpg?igshid=OGQ5ZDc2ODk2ZA=="), UIApplication.shared.canOpenURL(url) {
                                                 UIApplication.shared.open(url)
                                             }
@@ -171,7 +171,7 @@ struct AboutMeView: View {
                                                 .padding(5.0)
                                                 .frame(width: 70.0, height: 70.0)
                                         }.clipShape(Circle()).onTapGesture {
-                                            // When tapped, open the author's GitHub profile
+                                            // When tapped, open the my GitHub profile
                                             if let url = URL(string: "https://github.com/pafis"), UIApplication.shared.canOpenURL(url) {
                                                 UIApplication.shared.open(url)
                                             }
