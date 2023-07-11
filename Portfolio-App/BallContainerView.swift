@@ -45,7 +45,7 @@ class BallContainerView: UIView, UICollisionBehaviorDelegate {
     func setupDynamics() {
         dynamicAnimator = UIDynamicAnimator(referenceView: self)
         collisionBehavior = UICollisionBehavior()
-        collisionBehavior.translatesReferenceBoundsIntoBoundary = true
+        collisionBehavior.translatesReferenceBoundsIntoBoundary = false
         dynamicAnimator.addBehavior(collisionBehavior)
 
         fieldBehavior = UIFieldBehavior.springField()
@@ -63,20 +63,36 @@ class BallContainerView: UIView, UICollisionBehaviorDelegate {
         removeAllBallViews()
 
         for (index, ball) in self.balls.enumerated() {
-            let size: CGFloat = .init(50 + 50 * ball.level)
-            let minX = 80
-            let maxX = UIScreen.main.bounds.width - size
-            let minY = 100
-            let maxY = UIScreen.main.bounds.height - size
 
-            let x = CGFloat.random(in: CGFloat(minX) ... maxX)
-            let y = CGFloat.random(in: CGFloat(minY) ... maxY)
+            let size: CGFloat = CGFloat(80 + 30 * ball.level)
+            var overlapping = true
+            var position = CGPoint.zero
+
+            while overlapping {
+                // Generate a random position within the screen bounds
+                position = CGPoint(
+                    x: CGFloat.random(in: size/2..<UIScreen.main.bounds.width - size/2),
+                    y: CGFloat.random(in: size/2..<UIScreen.main.bounds.height - size/2)
+                )
+
+                // Check if the new ball overlaps with any existing balls or hits the screen bounds
+                overlapping = balls.contains(where: { existingBall in
+                    let distance = sqrt(
+                        pow(position.x - existingBall.startPosition.x, 2) +
+                        pow(position.y - existingBall.startPosition.y, 2)
+                    )
+                    return distance < size + 5 // Check if distance is less than size
+                }) || position.x - size/2 <= 20 || position.x + size/2 >= UIScreen.main.bounds.width - 20 || position.y - size/2 <= 20 || position.y + size/2 >= UIScreen.main.bounds.height - 20
+            }
+
+
+            self.balls[index].startPosition = position
 
             if self.balls[index].color == nil {
                 self.balls[index].color = randomColor()
             }
 
-            let ballView = BallViewWrapper(frame: CGRect(x: x, y: y, width: size, height: size), ball: ball)
+            let ballView = BallViewWrapper(frame: CGRect(x: ball.startPosition.x, y: ball.startPosition.y, width: size, height: size), ball: ball)
             ballView.layer.cornerRadius = size / 2
             ballView.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
             addSubview(ballView)
@@ -87,7 +103,9 @@ class BallContainerView: UIView, UICollisionBehaviorDelegate {
             ballView.addGestureRecognizer(tapGestureRecognizer)
             let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
             ballView.addGestureRecognizer(panGestureRecognizer)
+
             var delay = Double(index) * 0.15
+
             if ball.level >= 3 {
                 delay = 0
             }

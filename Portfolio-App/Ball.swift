@@ -21,4 +21,6 @@ struct Ball {
     let textSize: CGFloat
     // The color of the ball, which can be nil if it hasn't been assigned yet
     var color: UIColor?
+    // The position of the ball
+    var startPosition: CGPoint = .zero
 }
