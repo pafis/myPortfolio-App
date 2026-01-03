@@ -123,12 +123,12 @@ public struct MetalLavaView: UIViewRepresentable {
         let decorativeRadius: Float = 0.10
         let marginPxForSpacing: Float = 60
 
-        let usableWidth = 1.0
-        let countAcross = Int(width * 0.1)
+        let usableWidth = 0.6
+        let countAcross = Int((width) * 0.1)
 
-        let topY = 1.0 + 0.2
+        let topY = 1.0 + 0.15
         let step: Float = (countAcross > 1) ? (Float(usableWidth) / Float(countAcross - 1)) : 0.0
-        let startX: Float = 0.0
+        let startX: Float = 0.2
         for i in 0..<countAcross {
             let x = startX + Float(i) * step
             data.append(SIMD4(x, Float(topY), decorativeRadius, 1000.0 + Float(i)))

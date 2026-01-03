@@ -108,7 +108,7 @@ struct LavaMenuContainer: View {
             switch blobs[i].status {
             case .rising:
                 blobs[i].position.y -= blobs[i].currentSpeed
-                if blobs[i].position.y < -60 { blobs[i].status = .idle }
+                if blobs[i].position.y < 0 { if blobs[i].isDummy { blobs[i].status = .waiting} else { blobs[i].status = .idle}  }
             case .waiting:
                 if now.timeIntervalSince(blobs[i].waitStart) > blobs[i].waitTime { blobs[i].status = .sinking }
             case .sinking:
