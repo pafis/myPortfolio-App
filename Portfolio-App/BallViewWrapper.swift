@@ -5,10 +5,12 @@
 //  Created by Pascal Fischer on 07.07.23.
 //
 
+import UIKit
 import SwiftUI
 
 class BallViewWrapper: UIView {
     var ball: Ball // A Ball object that contains information about the ball
+    var isMerging: Bool = false
     let label: UILabel = .init() // A label to display the name of the ball
     private var imageView = UIImageView() // An image view to display the image of the ball
     var isTapped = false // A boolean to indicate if the ball has been tapped
@@ -29,9 +31,9 @@ class BallViewWrapper: UIView {
         imageView.contentMode = .scaleAspectFill
 
         super.init(frame: frame)
-        imageView.layer.cornerRadius = bounds.width / 2
+        imageView.layer.cornerRadius = (bounds.width * 0.6) / 2
         imageView.clipsToBounds = true
-        backgroundColor = self.ball.color
+        backgroundColor = .clear
         addSubview(imageView)
         sendSubviewToBack(imageView)
         setupLabel()
@@ -39,7 +41,9 @@ class BallViewWrapper: UIView {
     }
  override func layoutSubviews() {
             super.layoutSubviews()
-            imageView.frame = bounds
+            // keep the image smaller so the metaball renderer can be visible behind it
+            let inset = bounds.width * 0.18
+            imageView.frame = bounds.insetBy(dx: inset, dy: inset)
         }
     required init?(coder: NSCoder) {
         ball = Ball(level: 0, name: "Pascal Fischer", view: AnyView(EmptyView()), image: UIImage(), textSize: 10)

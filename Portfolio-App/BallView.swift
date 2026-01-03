@@ -11,12 +11,15 @@ import UIKit
 class UIBallViewController: UIViewController {
     private var ballView: BallContainerView!
     var balls: [Ball] = []
+    private var motionManager = MotionManager()
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Create an instance of BallView
         ballView = BallContainerView(balls: balls) // Update with your desired initial configuration
+        // wire motion manager
+        ballView.motionManager = motionManager
         // Add the BallView as a subview
         view.addSubview(ballView)
 
@@ -41,12 +44,14 @@ class UIBallViewController: UIViewController {
 
         // Set up the dynamics for the BallView
         ballView.setupDynamics()
+        motionManager.startGyroscopeUpdates()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
 
         // Perform any necessary cleanup or actions before the view disappears
+        motionManager.stopGyroscopeUpdates()
     }
 }
 

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -27,15 +27,15 @@
 		0C727EB72A577B5200C0CABC /* ServiceItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C727EB62A577B5200C0CABC /* ServiceItem.swift */; };
 		0C727EB92A577BA900C0CABC /* Ball.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C727EB82A577BA900C0CABC /* Ball.swift */; };
 		0C7820B12A413F7D003DE643 /* AboutMeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C7820B02A413F7D003DE643 /* AboutMeView.swift */; };
+		0CABFC9C2F08872B007D30C1 /* LavaRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFC9A2F08872B007D30C1 /* LavaRenderer.swift */; };
+		0CABFC9D2F08872B007D30C1 /* LavaMenuContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFC992F08872B007D30C1 /* LavaMenuContainer.swift */; };
+		0CABFC9E2F08872B007D30C1 /* MenuBlobState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFC9B2F08872B007D30C1 /* MenuBlobState.swift */; };
 		0CC4E5B42A49FE6A00F1D7A7 /* ComposeEmailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC4E5B32A49FE6A00F1D7A7 /* ComposeEmailView.swift */; };
 		0CC4E5B82A4A248E00F1D7A7 /* Education.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC4E5B72A4A248E00F1D7A7 /* Education.swift */; };
 		0CCBF7482A3C645B00CCD315 /* Portfolio_AppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CCBF7472A3C645B00CCD315 /* Portfolio_AppApp.swift */; };
 		0CCBF74A2A3C645B00CCD315 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CCBF7492A3C645B00CCD315 /* ContentView.swift */; };
 		0CCBF74C2A3C645C00CCD315 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0CCBF74B2A3C645C00CCD315 /* Assets.xcassets */; };
 		0CCBF7502A3C645C00CCD315 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0CCBF74F2A3C645C00CCD315 /* Preview Assets.xcassets */; };
-		0CCBF7572A3C661B00CCD315 /* BallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CCBF7562A3C661B00CCD315 /* BallView.swift */; };
-		0CDEED362A577C01009ADB7A /* BallContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CDEED352A577C01009ADB7A /* BallContainerView.swift */; };
-		0CDEED382A577C34009ADB7A /* BallViewWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CDEED372A577C34009ADB7A /* BallViewWrapper.swift */; };
 		0CDEED3A2A577CAE009ADB7A /* UIHostingControllerWithCompletion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CDEED392A577CAE009ADB7A /* UIHostingControllerWithCompletion.swift */; };
 		0CDEED3C2A577CF8009ADB7A /* UIViewControllerWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CDEED3B2A577CF8009ADB7A /* UIViewControllerWrapper.swift */; };
 		0CE4FE102A4A6D9A00380548 /* ExperienceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CE4FE0F2A4A6D9A00380548 /* ExperienceView.swift */; };
@@ -65,6 +65,9 @@
 		0C727EB62A577B5200C0CABC /* ServiceItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceItem.swift; sourceTree = "<group>"; };
 		0C727EB82A577BA900C0CABC /* Ball.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ball.swift; sourceTree = "<group>"; };
 		0C7820B02A413F7D003DE643 /* AboutMeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutMeView.swift; sourceTree = "<group>"; };
+		0CABFC992F08872B007D30C1 /* LavaMenuContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LavaMenuContainer.swift; sourceTree = "<group>"; };
+		0CABFC9A2F08872B007D30C1 /* LavaRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LavaRenderer.swift; sourceTree = "<group>"; };
+		0CABFC9B2F08872B007D30C1 /* MenuBlobState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBlobState.swift; sourceTree = "<group>"; };
 		0CC4E5B32A49FE6A00F1D7A7 /* ComposeEmailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeEmailView.swift; sourceTree = "<group>"; };
 		0CC4E5B72A4A248E00F1D7A7 /* Education.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Education.swift; sourceTree = "<group>"; };
 		0CCBF7442A3C645B00CCD315 /* Portfolio-App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Portfolio-App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -73,9 +76,6 @@
 		0CCBF74B2A3C645C00CCD315 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0CCBF74D2A3C645C00CCD315 /* Portfolio_App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Portfolio_App.entitlements; sourceTree = "<group>"; };
 		0CCBF74F2A3C645C00CCD315 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		0CCBF7562A3C661B00CCD315 /* BallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BallView.swift; sourceTree = "<group>"; };
-		0CDEED352A577C01009ADB7A /* BallContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BallContainerView.swift; sourceTree = "<group>"; };
-		0CDEED372A577C34009ADB7A /* BallViewWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BallViewWrapper.swift; sourceTree = "<group>"; };
 		0CDEED392A577CAE009ADB7A /* UIHostingControllerWithCompletion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIHostingControllerWithCompletion.swift; sourceTree = "<group>"; };
 		0CDEED3B2A577CF8009ADB7A /* UIViewControllerWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewControllerWrapper.swift; sourceTree = "<group>"; };
 		0CE4FE0F2A4A6D9A00380548 /* ExperienceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperienceView.swift; sourceTree = "<group>"; };
@@ -83,6 +83,10 @@
 		0CE4FE132A4A8C1500380548 /* ServicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServicesView.swift; sourceTree = "<group>"; };
 		0CEE52AA2A561807004FCD51 /* Info.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Info.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		0CABFCA12F088A62007D30C1 /* Shaders */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); name = Shaders; path = "Portfolio-App/Shaders"; sourceTree = SOURCE_ROOT; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		0CCBF7412A3C645B00CCD315 /* Frameworks */ = {
@@ -114,6 +118,10 @@
 		0CCBF7462A3C645B00CCD315 /* Portfolio-App */ = {
 			isa = PBXGroup;
 			children = (
+				0CABFCA12F088A62007D30C1 /* Shaders */,
+				0CABFC992F08872B007D30C1 /* LavaMenuContainer.swift */,
+				0CABFC9A2F08872B007D30C1 /* LavaRenderer.swift */,
+				0CABFC9B2F08872B007D30C1 /* MenuBlobState.swift */,
 				0C727EAA2A5778E600C0CABC /* CVEvent.swift */,
 				0C14DBA92A5643D70077894E /* ImprintView.swift */,
 				0CEE52AA2A561807004FCD51 /* Info.swift */,
@@ -124,7 +132,6 @@
 				0CCBF74B2A3C645C00CCD315 /* Assets.xcassets */,
 				0CCBF74D2A3C645C00CCD315 /* Portfolio_App.entitlements */,
 				0CCBF74E2A3C645C00CCD315 /* Preview Content */,
-				0CCBF7562A3C661B00CCD315 /* BallView.swift */,
 				0C7820B02A413F7D003DE643 /* AboutMeView.swift */,
 				0CE4FE112A4A7AF900380548 /* SkillsAndLanguagesView.swift */,
 				0CC4E5B72A4A248E00F1D7A7 /* Education.swift */,
@@ -146,8 +153,6 @@
 				0C727EB42A577AF200C0CABC /* MotionManager.swift */,
 				0C727EB62A577B5200C0CABC /* ServiceItem.swift */,
 				0C727EB82A577BA900C0CABC /* Ball.swift */,
-				0CDEED352A577C01009ADB7A /* BallContainerView.swift */,
-				0CDEED372A577C34009ADB7A /* BallViewWrapper.swift */,
 				0CDEED392A577CAE009ADB7A /* UIHostingControllerWithCompletion.swift */,
 				0CDEED3B2A577CF8009ADB7A /* UIViewControllerWrapper.swift */,
 			);
@@ -176,6 +181,9 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				0CABFCA12F088A62007D30C1 /* Shaders */,
 			);
 			name = "Portfolio-App";
 			packageProductDependencies = (
@@ -239,10 +247,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				0C727EB72A577B5200C0CABC /* ServiceItem.swift in Sources */,
-				0CDEED382A577C34009ADB7A /* BallViewWrapper.swift in Sources */,
 				0C14DBA82A5643BC0077894E /* LicensesView.swift in Sources */,
 				0C727EB52A577AF200C0CABC /* MotionManager.swift in Sources */,
-				0CCBF7572A3C661B00CCD315 /* BallView.swift in Sources */,
 				0C7820B12A413F7D003DE643 /* AboutMeView.swift in Sources */,
 				0C571DE72A4CEDFB00FD082E /* TypeWriterAnimationView.swift in Sources */,
 				0C727EAB2A5778E600C0CABC /* CVEvent.swift in Sources */,
@@ -264,10 +270,12 @@
 				0CE4FE122A4A7AF900380548 /* SkillsAndLanguagesView.swift in Sources */,
 				0CCBF7482A3C645B00CCD315 /* Portfolio_AppApp.swift in Sources */,
 				0C727EB32A577AC500C0CABC /* CircleData.swift in Sources */,
-				0CDEED362A577C01009ADB7A /* BallContainerView.swift in Sources */,
 				0C14DBAA2A5643D70077894E /* ImprintView.swift in Sources */,
 				0C14DBAC2A5643F30077894E /* VersionView.swift in Sources */,
 				0C571DE92A4CF40700FD082E /* ProgressView.swift in Sources */,
+				0CABFC9C2F08872B007D30C1 /* LavaRenderer.swift in Sources */,
+				0CABFC9D2F08872B007D30C1 /* LavaMenuContainer.swift in Sources */,
+				0CABFC9E2F08872B007D30C1 /* MenuBlobState.swift in Sources */,
 				0CEE52AB2A561807004FCD51 /* Info.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
