@@ -8,6 +8,12 @@
 import SwiftUI
 import MetalKit
 
+public struct BlobData {
+    var position: SIMD2<Float>
+    var size: SIMD2<Float>
+    var params: SIMD4<Float> // x: type (0=circle, 1=rect), y: role (0=assistant, 1=user), z: seed, w: unused
+}
+
 // MARK: - LavaRenderer
 final public class LavaRenderer: NSObject, MTKViewDelegate {
     public struct Uniforms {
@@ -20,18 +26,48 @@ final public class LavaRenderer: NSObject, MTKViewDelegate {
     public let device: MTLDevice
     let commandQueue: MTLCommandQueue
     let pipelineState: MTLRenderPipelineState
-    public var blobs: [SIMD4<Float>] = []
+    private var blobs: [BlobData] = []
+    private let blobsLock = NSLock()
+
+    private static let maxInflightFrames = 3
+    private let inflightSemaphore = DispatchSemaphore(value: maxInflightFrames)
+    private var inflightIndex: Int = 0
+    private var blobBuffers: [MTLBuffer?] = Array(repeating: nil, count: maxInflightFrames)
+    private var blobBufferCapacities: [Int] = Array(repeating: 0, count: maxInflightFrames)
+
+    private var emptyBlobBuffer: MTLBuffer?
     let startTime = Date()
+
+    public func updateBlobs(_ newBlobs: [BlobData]) {
+        blobsLock.lock()
+        blobs = newBlobs
+        blobsLock.unlock()
+    }
 
     public init?(device: MTLDevice) {
         self.device = device
         guard let q = device.makeCommandQueue() else { return nil }
         self.commandQueue = q
         do {
-            guard let library = device.makeDefaultLibrary() else { return nil }
+            guard let library = device.makeDefaultLibrary() else {
+                print("Metal: makeDefaultLibrary() returned nil")
+                return nil
+            }
 
-            let vertexFunction = library.makeFunction(name: "vertex_main")
-            let fragmentFunction = library.makeFunction(name: "fragment_main")
+            let vertexName = "vertex_lava_main"
+            let fragmentName = "fragment_lava_main"
+
+            guard let vertexFunction = library.makeFunction(name: vertexName) else {
+                let names = (library.functionNames).sorted().joined(separator: ", ")
+                print("Metal: Missing vertex function '\(vertexName)'. Available: [\(names)]")
+                return nil
+            }
+
+            guard let fragmentFunction = library.makeFunction(name: fragmentName) else {
+                let names = (library.functionNames).sorted().joined(separator: ", ")
+                print("Metal: Missing fragment function '\(fragmentName)'. Available: [\(names)]")
+                return nil
+            }
 
             let pipeline = MTLRenderPipelineDescriptor()
             pipeline.vertexFunction = vertexFunction
@@ -52,6 +88,8 @@ final public class LavaRenderer: NSObject, MTKViewDelegate {
     public func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
 
     public func draw(in view: MTKView) {
+        _ = inflightSemaphore.wait(timeout: .distantFuture)
+
         guard let drawable = view.currentDrawable,
               let descriptor = view.currentRenderPassDescriptor else { return }
         
@@ -59,6 +97,9 @@ final public class LavaRenderer: NSObject, MTKViewDelegate {
         descriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
         
         guard let commandBuffer = commandQueue.makeCommandBuffer() else { return }
+        commandBuffer.addCompletedHandler { [weak self] _ in
+            self?.inflightSemaphore.signal()
+        }
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else { return }
         encoder.setRenderPipelineState(pipelineState)
         
@@ -66,17 +107,48 @@ final public class LavaRenderer: NSObject, MTKViewDelegate {
         encoder.setVertexBytes(vertices, length: vertices.count * MemoryLayout<SIMD2<Float>>.stride, index: 0)
         
         let time = Float(Date().timeIntervalSince(startTime))
+
+        blobsLock.lock()
+        let blobSnapshot = blobs
+        blobsLock.unlock()
         
         var uniforms = Uniforms(
             resolution: SIMD2(Float(view.drawableSize.width), Float(view.drawableSize.height)),
-            blobCount: Int32(blobs.count),
-            threshold: 0.38,
+            blobCount: Int32(blobSnapshot.count),
+            threshold: 0.7, // Lower => larger/more visible blobs (incl. dummies)
             time: time
         )
         
         encoder.setFragmentBytes(&uniforms, length: MemoryLayout<Uniforms>.stride, index: 0)
-        if !blobs.isEmpty {
-            encoder.setFragmentBytes(blobs, length: blobs.count * MemoryLayout<SIMD4<Float>>.stride, index: 1)
+        let bufferIndex = inflightIndex
+        inflightIndex = (inflightIndex + 1) % Self.maxInflightFrames
+
+        if blobSnapshot.isEmpty {
+            if emptyBlobBuffer == nil {
+                emptyBlobBuffer = device.makeBuffer(length: MemoryLayout<BlobData>.stride, options: .storageModeShared)
+                emptyBlobBuffer?.label = "LavaRenderer.emptyBlobBuffer"
+            }
+            if let buf = emptyBlobBuffer {
+                encoder.setFragmentBuffer(buf, offset: 0, index: 1)
+            }
+        } else {
+            let needed = blobSnapshot.count
+            if blobBuffers[bufferIndex] == nil || blobBufferCapacities[bufferIndex] < needed {
+                let newCapacity = max(needed, blobBufferCapacities[bufferIndex] * 2, 64)
+                let length = newCapacity * MemoryLayout<BlobData>.stride
+                blobBuffers[bufferIndex] = device.makeBuffer(length: length, options: .storageModeShared)
+                blobBuffers[bufferIndex]?.label = "LavaRenderer.blobBuffer[\(bufferIndex)]"
+                blobBufferCapacities[bufferIndex] = newCapacity
+            }
+
+            if let buffer = blobBuffers[bufferIndex] {
+                let capacity = blobBufferCapacities[bufferIndex]
+                let ptr = buffer.contents().bindMemory(to: BlobData.self, capacity: capacity)
+                for i in 0..<needed {
+                    ptr.advanced(by: i).pointee = blobSnapshot[i]
+                }
+                encoder.setFragmentBuffer(buffer, offset: 0, index: 1)
+            }
         }
         
         encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6)
@@ -101,51 +173,76 @@ public struct MetalLavaView: UIViewRepresentable {
         view.preferredFramesPerSecond = 60
         view.enableSetNeedsDisplay = false
         view.isPaused = false
-        
-        view.drawableSize = view.bounds.size
-        
-        if let device = view.device {
-            let renderer = LavaRenderer(device: device)
+
+        if let device = view.device, let renderer = LavaRenderer(device: device) {
             context.coordinator.renderer = renderer
             view.delegate = renderer
         }
+
         return view
     }
 
     public func updateUIView(_ uiView: MTKView, context: Context) {
+        let scale = uiView.contentScaleFactor
+        let drawableSize = CGSize(width: uiView.bounds.width * scale, height: uiView.bounds.height * scale)
+        if uiView.drawableSize != drawableSize {
+            uiView.drawableSize = drawableSize
+        }
+
         let width = Float(containerSize.width)
         let height = Float(containerSize.height)
-        
-        var data = blobs.filter { $0.status != .idle }.map { blob in
-            return SIMD4(Float(blob.position.x) / width, Float(blob.position.y) / height, Float(blob.baseRadius) / height, blob.wobbleSeed)
-        }
-        
-        let decorativeRadius: Float = 0.10
-        let marginPxForSpacing: Float = 60
-
-        let usableWidth = 0.6
-        let countAcross = Int((width) * 0.1)
-
-        let topY = 1.0 + 0.15
-        let step: Float = (countAcross > 1) ? (Float(usableWidth) / Float(countAcross - 1)) : 0.0
-        let startX: Float = 0.2
-        for i in 0..<countAcross {
-            let x = startX + Float(i) * step
-            data.append(SIMD4(x, Float(topY), decorativeRadius, 1000.0 + Float(i)))
+        guard width > 0, height > 0 else {
+            context.coordinator.renderer?.updateBlobs([])
+            return
         }
 
-        let bottomY = 0.0 - 0.3
-        for i in 0..<countAcross {
-            let x = startX + Float(i) * step
-            data.append(SIMD4(x, Float(bottomY), decorativeRadius, 2000.0 + Float(i)))
+        var data: [BlobData] = blobs.compactMap { blob in
+            guard blob.status != .idle else { return nil }
+            let px = Float(blob.position.x)
+            let py = Float(blob.position.y)
+            let pos = SIMD2(px / width, py / height)
+
+            if blob.status == .chatBubble || blob.status == .spawningToChat || blob.status == .dismissing {
+                
+                let shrinkPx: CGFloat = -10
+                let wPx = max(blob.bubbleWidth - shrinkPx, 40)
+                let hPx = max(blob.bubbleHeight - shrinkPx, 24)
+                let w = Float(wPx) / width
+                let h = Float(hPx) / height
+                let role: Float = (blob.chatRole == .user) ? 1.0 : 0.0
+                return BlobData(
+                    position: pos,
+                    size: SIMD2(w, h),
+                    params: SIMD4(1.0, role, blob.wobbleSeed, 0.0) // type=1 chat rect
+                )
+            }
+
+            return BlobData(
+                position: pos,
+                size: SIMD2((Float(blob.baseRadius) / height) * (blob.isDummy ? 1.25 : 1.0), 0.0),
+                params: SIMD4(0.0, 0.0, blob.wobbleSeed, 0.0) // type=0 circle
+            )
         }
 
-      
-        uiView.drawableSize = uiView.bounds.size
+        // Reservoir: a bottom pool made from multiple large circle blobs.
+        // This spans left→right and keeps an organic (non-rect) silhouette.
+        let reservoirY: Float = 1.3 
+        let reservoirRadius: Float = 0.18 
+        let reservoirXs: [Float] = [-0.15, 0.15, 0.50, 0.85, 1.15]
+        for x in reservoirXs {
+            data.append(
+                BlobData(
+                    position: SIMD2(x, reservoirY),
+                    size: SIMD2(reservoirRadius, 0.0),
+                    params: SIMD4(0.0, 0.0, 0.0, 0.0) 
+                )
+            )
+        }
 
-        context.coordinator.renderer?.blobs = data
+        context.coordinator.renderer?.updateBlobs(data)
     }
     
     public class Coordinator { public var renderer: LavaRenderer? }
 }
+
 
