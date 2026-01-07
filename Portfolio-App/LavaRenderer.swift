@@ -11,7 +11,7 @@ import MetalKit
 public struct BlobData {
     var position: SIMD2<Float>
     var size: SIMD2<Float>
-    var params: SIMD4<Float> // x: type (0=circle, 1=rect), y: role (0=assistant, 1=user), z: seed, w: unused
+    var params: SIMD4<Float> // x: type (0=circle, 1=rect), y: role (rect only), z: seed, w: upwardSpeed (normalized/sec)
 }
 
 // MARK: - LavaRenderer
@@ -202,6 +202,19 @@ public struct MetalLavaView: UIViewRepresentable {
             let py = Float(blob.position.y)
             let pos = SIMD2(px / width, py / height)
 
+            // Upward speed in normalized-units per second (0 when not rising).
+            // Coordinate system: y increases downward; upward motion => negative dy.
+            let vdy = Float(blob.velocity.dy)
+            var upwardSpeedPointsPerSec = max(0.0, -vdy)
+
+            // Fallback: for tick-driven rise/dismiss states, currentSpeed is points-per-tick.
+            // This keeps buoyancy deformation visible even if velocity isn't updated (e.g. during view/layout transitions).
+            if blob.status == .rising || blob.status == .dismissing {
+                let assumedFps: Float = 60.0
+                upwardSpeedPointsPerSec = max(upwardSpeedPointsPerSec, Float(blob.currentSpeed) * assumedFps)
+            }
+            let upwardSpeedN = (height > 0) ? (upwardSpeedPointsPerSec / height) : 0.0
+
             if blob.status == .chatBubble || blob.status == .spawningToChat || blob.status == .dismissing {
                 
                 let shrinkPx: CGFloat = -10
@@ -213,14 +226,14 @@ public struct MetalLavaView: UIViewRepresentable {
                 return BlobData(
                     position: pos,
                     size: SIMD2(w, h),
-                    params: SIMD4(1.0, role, blob.wobbleSeed, 0.0) // type=1 chat rect
+                    params: SIMD4(1.0, role, blob.wobbleSeed, upwardSpeedN) // type=1 chat rect
                 )
             }
 
             return BlobData(
                 position: pos,
                 size: SIMD2((Float(blob.baseRadius) / height) * (blob.isDummy ? 1.25 : 1.0), 0.0),
-                params: SIMD4(0.0, 0.0, blob.wobbleSeed, 0.0) // type=0 circle
+                params: SIMD4(0.0, 0.0, blob.wobbleSeed, upwardSpeedN) // type=0 circle
             )
         }
 

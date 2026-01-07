@@ -4,7 +4,7 @@ using namespace metal;
 struct BlobData {
     float2 position;  // normalized 0..1 (all blob types)
     float2 size;      // circle: size.x = radius normalized (by container height). rect: width/height normalized.
-    float4 params;    // x: type (0=circle, 1=rect), y: role (0=assistant, 1=user), z: seed, w: unused
+    float4 params;    // x: type (0=circle, 1=rect), y: role (0=assistant, 1=user), z: seed, w: upwardSpeed (normalized/sec)
 };
 
 struct Uniforms {
@@ -12,7 +12,6 @@ struct Uniforms {
     int blobCount;
     float threshold;
     float time;
-    int debugMode;
 };
 
 vertex float4 vertex_lava_main(uint vertexID [[vertex_id]],
@@ -60,7 +59,8 @@ struct FieldResult {
 static inline FieldResult computeField(float2 aspectUV,
                                        float aspect,
                                        constant BlobData *blobs,
-                                       int blobCount) {
+                                       int blobCount,
+                                       float time) {
     FieldResult out;
     out.total = 0.0;
     out.rect = 0.0;
@@ -72,14 +72,47 @@ static inline FieldResult computeField(float2 aspectUV,
 
     for (int i = 0; i < blobCount; i++) {
         float type = blobs[i].params.x;
+        float seed = blobs[i].params.z;
+        // Upward speed in normalized units / second; scaled into [0..1] intensity.
+        // Stronger mapping so the effect reads clearly at typical rise speeds.
+        float up = clamp(blobs[i].params.w * 10.0, 0.0, 1.0);
 
         if (type < 0.5) {
             // Circle blob
             float2 p = blobs[i].position;
             float2 pos = float2(p.x * aspect, p.y);
             float radius = max(blobs[i].size.x, 0.001);
+
             float2 d = aspectUV - pos;
-            float dist = length(d);
+
+            // Buoyancy deformation (subtle): bend sideways + micro ripple while rising.
+            // Kept small to avoid a watery look.
+            float phase = (time * 2.2) + (seed * 0.17);
+
+            // Bend: x-offset proportional to vertical position within blob.
+            float bend = up * 0.18 * sin(phase);
+            d.x += bend * (d.y / radius) * radius;
+
+            // Ripple: tiny lateral scallop, stronger near lower half (trailing region).
+            float trailing = smoothstep(0.0, 1.0, (d.y / radius) * 0.6 + 0.5);
+            float ripple = up * 0.060 * sin((d.y / radius) * 6.5 + phase * 1.3);
+            d.x += ripple * trailing * radius;
+
+            // Stretch: slightly elongate in rise direction.
+            float stretchY = 1.0 + up * 0.30;
+            float squashX = 1.0 - up * 0.16;
+
+            // Midsection pull ("waist" pinch) while rising.
+            // This narrows the blob around its center without looking watery.
+            float yN = d.y / radius; // -1..1 (approx)
+            float mid = exp(-pow(yN / 0.55, 2.0)); // peak at center, fades toward ends
+            float pinch = up * (0.22 + 0.06 * sin(phase * 0.7)) * mid;
+            squashX *= (1.0 - pinch);
+            squashX = max(squashX, 0.50);
+
+            float2 dm = float2(d.x / max(squashX, 0.65), d.y / max(stretchY, 1.0));
+
+            float dist = length(dm);
             float denom = max(dist * dist, eps * eps);
             float influence = (radius * radius) / denom;
             out.total += influence;
@@ -91,12 +124,40 @@ static inline FieldResult computeField(float2 aspectUV,
             float2 halfSize = 0.5 * float2(size.x * aspect, size.y);
             // Corner radius: proportional to height, but capped.
             float r = min(halfSize.y * 0.7, 0.06);
-            float sd = sdRoundedBox(aspectUV - pos, halfSize, r);
+
+            float2 q = aspectUV - pos;
+
+            // Same buoyancy feel for chat bubbles, but extra subtle.
+            float phase = (time * 2.0) + (seed * 0.13);
+            // Requested: make chat deformation much stronger.
+            // Note: we clamp squash to keep the rounded-rect SDF stable.
+            constexpr float chatBoost = 20.0;
+            float bend = up * (0.10 * chatBoost) * sin(phase);
+            q.x += bend * (q.y / max(halfSize.y, 0.001)) * halfSize.y;
+
+            float stretchY = 1.0 + up * (0.16 * chatBoost);
+            float squashX = 1.0 - up * (0.10 * chatBoost);
+
+            // Midsection pull for chat bubbles while rising.
+            float yN = q.y / max(halfSize.y, 0.001);
+            float mid = exp(-pow(yN / 0.65, 2.0));
+            float pinch = up * (0.14 * chatBoost) * mid;
+            squashX *= (1.0 - pinch);
+
+            float2 q2 = float2(
+                q.x / max(squashX, 0.55),
+                q.y / max(stretchY, 1.0)
+            );
+
+            float sd = sdRoundedBox(q2, halfSize, r);
             float dist = max(sd, 0.0);
             float denom = max(dist * dist, eps * eps);
             // Weight by min dimension so small bubbles don't vanish.
             float w = max(min(halfSize.x, halfSize.y), 0.01);
-            float influence = (w * w) / denom;
+            // Rects use a slightly weaker kernel so the threshold contour hugs the rounded-rect boundary.
+            // This makes bend/pinch deformation visually readable (without looking watery).
+            constexpr float rectInfluenceScale = 0.06;
+            float influence = (w * w * rectInfluenceScale) / denom;
 
             out.total += influence;
             out.rect += influence;
@@ -121,7 +182,7 @@ fragment float4 fragment_lava_main(float4 position [[position]],
     float3 background = getBackground(uv, aspect);
 
     // 2) Field + alpha
-    FieldResult field0 = computeField(aspectUV, aspect, blobs, uniforms.blobCount);
+    FieldResult field0 = computeField(aspectUV, aspect, blobs, uniforms.blobCount, uniforms.time);
     float field = field0.total;
 
     // Threshold here is in "influence" units. Lower -> thicker blobs.
@@ -135,10 +196,10 @@ fragment float4 fragment_lava_main(float4 position [[position]],
     float px = 1.0 / max(uniforms.resolution.y, 1.0);
     float2 e = float2(px, 0.0);
 
-    float fx1 = computeField(aspectUV + float2(e.x * aspect, 0.0), aspect, blobs, uniforms.blobCount).total;
-    float fx0 = computeField(aspectUV - float2(e.x * aspect, 0.0), aspect, blobs, uniforms.blobCount).total;
-    float fy1 = computeField(aspectUV + float2(0.0, e.x), aspect, blobs, uniforms.blobCount).total;
-    float fy0 = computeField(aspectUV - float2(0.0, e.x), aspect, blobs, uniforms.blobCount).total;
+    float fx1 = computeField(aspectUV + float2(e.x * aspect, 0.0), aspect, blobs, uniforms.blobCount, uniforms.time).total;
+    float fx0 = computeField(aspectUV - float2(e.x * aspect, 0.0), aspect, blobs, uniforms.blobCount, uniforms.time).total;
+    float fy1 = computeField(aspectUV + float2(0.0, e.x), aspect, blobs, uniforms.blobCount, uniforms.time).total;
+    float fy0 = computeField(aspectUV - float2(0.0, e.x), aspect, blobs, uniforms.blobCount, uniforms.time).total;
 
     float2 grad = float2(fx1 - fx0, fy1 - fy0) / (2.0 * e.x);
     float3 normal = normalize(float3(grad, 1.2));

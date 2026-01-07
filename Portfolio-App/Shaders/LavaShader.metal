@@ -58,6 +58,7 @@ struct FieldResult {
     float2 grad;
     float rect;
     float rectRoleWeighted;
+    float seedWeighted;
 };
 
 static inline float2 signNotZero(float2 v) {
@@ -88,6 +89,7 @@ static inline void sdRoundedBoxWithGrad(float2 p, float2 b, float r, thread floa
 
 static inline FieldResult computeFieldAndGrad(float2 aspectUV,
                                               float aspect,
+                                              float time,
                                               constant BlobData *blobs,
                                               int blobCount) {
     FieldResult out;
@@ -95,12 +97,14 @@ static inline FieldResult computeFieldAndGrad(float2 aspectUV,
     out.grad = float2(0.0);
     out.rect = 0.0;
     out.rectRoleWeighted = 0.0;
+    out.seedWeighted = 0.0;
 
     constexpr float eps = 0.002;
     const float eps2 = eps * eps;
 
     for (int i = 0; i < blobCount; i++) {
         float type = blobs[i].params.x;
+        float seed = blobs[i].params.z;
 
         if (type < 0.5) {
             // Circle: influence = r^2 / (|d|^2 + eps^2)
@@ -108,15 +112,33 @@ static inline FieldResult computeFieldAndGrad(float2 aspectUV,
             float2 pos = float2(p.x * aspect, p.y);
             float r = max(blobs[i].size.x, 0.001);
             float2 d = aspectUV - pos;
-            float dist2 = dot(d, d);
+
+            // Deform circle into an oriented oval (ellipse) without changing overall size.
+            // Area-preserving anisotropy: scaleX = s, scaleY = 1/s (so determinant stays 1).
+            float phase = seed * 6.2831853;
+            float s = 1.0 + 0.22 * sin(time * 0.85 + phase);
+            s = max(s, 0.35);
+
+            float ang = phase * 0.37; // fixed orientation per blob
+            float c = cos(ang);
+            float sn = sin(ang);
+            float2x2 rot = float2x2(c, -sn, sn, c);
+            float2 dRot = rot * d;
+            float2 dWarp = float2(dRot.x * s, dRot.y / s);
+
+            float dist2 = dot(dWarp, dWarp);
             float denom = dist2 + eps2;
             float r2 = r * r;
             float influence = r2 / denom;
             out.total += influence;
+            out.seedWeighted += influence * seed;
 
-            // grad(influence) = -2*r^2 * d / denom^2
+            // grad(influence) = -2*r^2 * (A^T * dWarp) / denom^2, where dWarp = A*d
             float k = (-2.0 * r2) / (denom * denom);
-            out.grad += d * k;
+            float2 scaled = float2(dWarp.x * s, dWarp.y / s);
+            float2x2 rotT = float2x2(c, sn, -sn, c);
+            float2 gradVec = rotT * scaled;
+            out.grad += gradVec * k;
         } else {
             // Rounded rect: treat chat bubbles as "filled" density to avoid a hollow outline.
             float2 p = blobs[i].position;
@@ -138,6 +160,7 @@ static inline FieldResult computeFieldAndGrad(float2 aspectUV,
             out.total += influence;
             out.rect += influence;
             out.rectRoleWeighted += influence * clamp(blobs[i].params.y, 0.0, 1.0);
+            out.seedWeighted += influence * seed;
 
             // d/dsd logistic = -(density/k) * p * (1-p), where p=influence/density
             float p01 = influence / max(density, 1e-4);
@@ -158,7 +181,7 @@ fragment float4 fragment_lava_main(float4 position [[position]],
 
     float3 background = getBackground(uv, aspect);
 
-    FieldResult field0 = computeFieldAndGrad(aspectUV, aspect, blobs, uniforms.blobCount);
+    FieldResult field0 = computeFieldAndGrad(aspectUV, aspect, uniforms.time, blobs, uniforms.blobCount);
     float field = field0.total;
 
     float threshold = max(uniforms.threshold, 0.001);

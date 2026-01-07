@@ -136,13 +136,22 @@ struct LavaMenuContainer: View {
         }
     }
 
-    private func handleChatOverlayDismissal() {
+    private func handleChatOverlayDismissal(_ size: CGSize) {
         guard !showChatOverlay else { return }
         for i in blobs.indices {
-            if blobs[i].status == .chatBubble || blobs[i].status == .spawningToChat {
-                blobs[i].status = .dismissing
+            if blobs[i].status == .chatBubble || blobs[i].status == .spawningToChat || blobs[i].status == .dismissing {
+                // Chat overlay dismissed: detach chat metadata and let blobs rise out like menu items.
+                // This is independent of message clearing timing, so blobs don't disappear via `.dismissing`.
+                blobs[i].messageID = nil
+                blobs[i].text = ""
                 blobs[i].isAnchored = false
-                blobs[i].currentSpeed = Constants.dismissSpeed
+                blobs[i].targetPosition = nil
+
+                // Keep the chat bubble's shape/size while it floats up.
+                // (`LavaRenderer` draws `.dismissing` as a chat-rect using `bubbleWidth/Height`.)
+                blobs[i].isDummy = false
+                blobs[i].status = .dismissing
+                blobs[i].currentSpeed = max(blobs[i].baseSpeed, Constants.dismissSpeed)
             }
         }
     }
@@ -179,6 +188,8 @@ struct LavaMenuContainer: View {
                     blobs[i].text = ""
                     blobs[i].isAnchored = false
                     blobs[i].targetPosition = nil
+                    blobs[i].bubbleWidth = 0
+                    blobs[i].bubbleHeight = 0
                 }
             }
         }
@@ -187,7 +198,12 @@ struct LavaMenuContainer: View {
     private func update(_ size: CGSize) {
         let now = Date()
 
-        handleChatOverlayDismissal()
+        // Capture previous positions for velocity computation.
+        for i in blobs.indices {
+            blobs[i].previousPosition = blobs[i].position
+        }
+
+        handleChatOverlayDismissal(size)
         stepChatBlobs()
         
         // If focus just started, tell all active blobs to flee sideways
@@ -308,6 +324,20 @@ struct LavaMenuContainer: View {
                 if blobs[i].position.y > size.height + 100 { blobs[i].status = .idle }
             default: break
             }
+        }
+
+        // Derive per-blob velocity (points/second) for rendering deformation.
+        let dt = max(Constants.timerHz, 1.0 / 120.0)
+        let invDt = CGFloat(1.0 / dt)
+        for i in blobs.indices {
+            if blobs[i].status == .chatBubble && blobs[i].isAnchored {
+                blobs[i].velocity = .zero
+                continue
+            }
+
+            let dx = blobs[i].position.x - blobs[i].previousPosition.x
+            let dy = blobs[i].position.y - blobs[i].previousPosition.y
+            blobs[i].velocity = CGVector(dx: dx * invDt, dy: dy * invDt)
         }
     }
 }

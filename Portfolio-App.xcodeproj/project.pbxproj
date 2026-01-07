@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0CABFCC62F0D1D6E007D30C1 /* ChatSystemPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFCC52F0D1D6E007D30C1 /* ChatSystemPrompt.swift */; };
 		0C14DBA82A5643BC0077894E /* LicensesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C14DBA72A5643BC0077894E /* LicensesView.swift */; };
 		0C14DBAA2A5643D70077894E /* ImprintView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C14DBA92A5643D70077894E /* ImprintView.swift */; };
 		0C14DBAC2A5643F30077894E /* VersionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C14DBAB2A5643F30077894E /* VersionView.swift */; };
@@ -31,6 +32,7 @@
 		0CABFC9D2F08872B007D30C1 /* LavaMenuContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFC992F08872B007D30C1 /* LavaMenuContainer.swift */; };
 		0CABFC9E2F08872B007D30C1 /* MenuBlobState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFC9B2F08872B007D30C1 /* MenuBlobState.swift */; };
 		0CABFCB02F0A9231007D30C1 /* ChatScrollOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFCAF2F0A9231007D30C1 /* ChatScrollOverlay.swift */; };
+		0CABFCB82F0C0322007D30C1 /* ChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFCB72F0C031C007D30C1 /* ChatService.swift */; };
 		0CC4E5B42A49FE6A00F1D7A7 /* ComposeEmailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC4E5B32A49FE6A00F1D7A7 /* ComposeEmailView.swift */; };
 		0CC4E5B82A4A248E00F1D7A7 /* Education.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC4E5B72A4A248E00F1D7A7 /* Education.swift */; };
 		0CCBF7482A3C645B00CCD315 /* Portfolio_AppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CCBF7472A3C645B00CCD315 /* Portfolio_AppApp.swift */; };
@@ -46,6 +48,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0CABFCC52F0D1D6E007D30C1 /* ChatSystemPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSystemPrompt.swift; sourceTree = "<group>"; };
 		0C14DBA72A5643BC0077894E /* LicensesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicensesView.swift; sourceTree = "<group>"; };
 		0C14DBA92A5643D70077894E /* ImprintView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImprintView.swift; sourceTree = "<group>"; };
 		0C14DBAB2A5643F30077894E /* VersionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersionView.swift; sourceTree = "<group>"; };
@@ -70,6 +73,7 @@
 		0CABFC9A2F08872B007D30C1 /* LavaRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LavaRenderer.swift; sourceTree = "<group>"; };
 		0CABFC9B2F08872B007D30C1 /* MenuBlobState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBlobState.swift; sourceTree = "<group>"; };
 		0CABFCAF2F0A9231007D30C1 /* ChatScrollOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatScrollOverlay.swift; sourceTree = "<group>"; };
+		0CABFCB72F0C031C007D30C1 /* ChatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatService.swift; sourceTree = "<group>"; };
 		0CC4E5B32A49FE6A00F1D7A7 /* ComposeEmailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeEmailView.swift; sourceTree = "<group>"; };
 		0CC4E5B72A4A248E00F1D7A7 /* Education.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Education.swift; sourceTree = "<group>"; };
 		0CCBF7442A3C645B00CCD315 /* Portfolio-App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Portfolio-App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -120,6 +124,8 @@
 		0CCBF7462A3C645B00CCD315 /* Portfolio-App */ = {
 			isa = PBXGroup;
 			children = (
+				0CABFCC52F0D1D6E007D30C1 /* ChatSystemPrompt.swift */,
+				0CABFCB72F0C031C007D30C1 /* ChatService.swift */,
 				0CABFCAF2F0A9231007D30C1 /* ChatScrollOverlay.swift */,
 				0CABFCA12F088A62007D30C1 /* Shaders */,
 				0CABFC992F08872B007D30C1 /* LavaMenuContainer.swift */,
@@ -249,6 +255,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0CABFCC62F0D1D6E007D30C1 /* ChatSystemPrompt.swift in Sources */,
 				0C727EB72A577B5200C0CABC /* ServiceItem.swift in Sources */,
 				0C14DBA82A5643BC0077894E /* LicensesView.swift in Sources */,
 				0C727EB52A577AF200C0CABC /* MotionManager.swift in Sources */,
@@ -256,6 +263,7 @@
 				0C571DE72A4CEDFB00FD082E /* TypeWriterAnimationView.swift in Sources */,
 				0C727EAB2A5778E600C0CABC /* CVEvent.swift in Sources */,
 				0CC4E5B42A49FE6A00F1D7A7 /* ComposeEmailView.swift in Sources */,
+				0CABFCB82F0C0322007D30C1 /* ChatService.swift in Sources */,
 				0CDEED3A2A577CAE009ADB7A /* UIHostingControllerWithCompletion.swift in Sources */,
 				0CC4E5B82A4A248E00F1D7A7 /* Education.swift in Sources */,
 				0CCBF74A2A3C645B00CCD315 /* ContentView.swift in Sources */,
@@ -406,14 +414,17 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "Portfolio-App/Portfolio_App.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Portfolio-App/Preview Content\"";
-				DEVELOPMENT_TEAM = 4F323VYRP5;
+				DEVELOPMENT_TEAM = 8874WJHU82;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Portfolio App";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -429,8 +440,9 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.pascalfischer.Portfolio-App";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.pascalfischer.us.Portfolio-App";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
@@ -447,14 +459,17 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "Portfolio-App/Portfolio_App.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Portfolio-App/Preview Content\"";
-				DEVELOPMENT_TEAM = 4F323VYRP5;
+				DEVELOPMENT_TEAM = 8874WJHU82;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Portfolio App";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -470,8 +485,9 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.pascalfischer.Portfolio-App";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.pascalfischer.us.Portfolio-App";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;

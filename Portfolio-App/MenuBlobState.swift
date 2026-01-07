@@ -26,81 +26,6 @@ public struct ChatMessage: Identifiable {
     }
 }
 
-public class ChatService: ObservableObject {
-    @Published public var messages: [ChatMessage] = []
-    @Published public var isTyping = false
-    
-    private let systemPrompt = """
-    You are Pascal Fischer's portfolio assistant. You are helpful, friendly, and knowledgeable about Pascal's work.
-    Keep your answers concise and relevant to the portfolio context.
-    """
-    
-    public init() {}
-
-    public func sendMessage(_ text: String) {
-        let userMessage = ChatMessage(role: .user, content: text)
-        messages.append(userMessage)
-        isTyping = true
-        
-        Task {
-            do {
-                let conversationHistory = messages.map { msg in
-                    "\(msg.role == .user ? "User" : "Assistant"): \(msg.content)"
-                }.joined(separator: "\n")
-                
-                let fullPrompt = """
-                \(systemPrompt)
-                
-                Conversation:
-                \(conversationHistory)
-                """
-                
-                guard let url = URL(string: "foundation://chat") else {
-                    throw NSError(domain: "ChatService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
-                }
-                
-                var request = URLRequest(url: url)
-                request.httpMethod = "POST"
-                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                
-                let payload: [String: Any] = [
-                    "prompt": fullPrompt,
-                    "temperature": 0.7,
-                    "max_tokens": 500
-                ]
-                
-                request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-                
-                let (data, _) = try await URLSession.shared.data(for: request)
-                
-                if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let content = json["response"] as? String {
-                    await MainActor.run {
-                        self.isTyping = false
-                        let assistantMessage = ChatMessage(role: .assistant, content: content)
-                        self.messages.append(assistantMessage)
-                    }
-                } else {
-                    throw NSError(domain: "ChatService", code: -2, userInfo: [NSLocalizedDescriptionKey: "Invalid response"])
-                }
-            } catch {
-                await MainActor.run {
-                    self.isTyping = false
-                    let demoResponse = "Thank you for your message. I'm Pascal's portfolio assistant. While the AI service is being configured, please feel free to explore the portfolio to learn more about Pascal's work, skills, and experience."
-                    let assistantMessage = ChatMessage(role: .assistant, content: demoResponse)
-                    self.messages.append(assistantMessage)
-                }
-                print("Chat error: \(error)")
-            }
-        }
-    }
-    
-    public func clear() {
-        messages.removeAll()
-        isTyping = false
-    }
-}
-
 // MARK: - MenuBlobState
 public struct MenuBlobState: Identifiable {
     public let id = UUID()
@@ -114,6 +39,8 @@ public struct MenuBlobState: Identifiable {
     public let wobbleSeed: Float
 
     public var position = CGPoint(x: 0, y: 2000)
+    public var previousPosition = CGPoint(x: 0, y: 2000)
+    public var velocity: CGVector = .zero // points/second
     // Normalized lane position (0..1) for stable menu blob X placement.
     public var laneT: CGFloat? = nil
     public var targetPosition: CGPoint?
@@ -147,6 +74,8 @@ public struct MenuBlobState: Identifiable {
 
     public mutating func spawn(x: CGFloat, y: CGFloat) {
         position = CGPoint(x: x, y: y)
+        previousPosition = position
+        velocity = .zero
         status = .rising
         baseRadius = originalRadius
         currentSpeed = baseSpeed
@@ -167,6 +96,8 @@ public struct MenuBlobState: Identifiable {
             self.status = .spawningToChat
             self.isAnchored = false
             self.position = CGPoint(x: frame.midX, y: 2000)
+            self.previousPosition = self.position
+            self.velocity = .zero
         }
         self.isDummy = false
         self.bubbleWidth = frame.width
@@ -175,6 +106,8 @@ public struct MenuBlobState: Identifiable {
         
         if self.isAnchored {
             self.position = self.targetPosition!
+            self.previousPosition = self.position
+            self.velocity = .zero
         }
     }
 }
