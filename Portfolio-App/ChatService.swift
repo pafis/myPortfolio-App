@@ -29,6 +29,52 @@ Requirements:
     
     public init() {}
 
+    public func generateMenuKeywords(count: Int = 6) async throws -> [String] {
+        let targetCount = max(1, min(12, count))
+        let request = """
+Generate exactly \(targetCount) single-keyword topic suggestions for Pascal Fischer's portfolio.
+
+Requirements:
+- Each suggestion must be a single keyword (no spaces).
+- Use keywords a recruiter would click to learn more.
+- No emojis.
+- Output ONLY a JSON array of strings.
+"""
+
+#if canImport(FoundationModels)
+        if #available(iOS 26.0, macOS 26.0, visionOS 26.0, *) {
+            let state = getOnDeviceStateBox()
+
+            // Avoid concurrent use with the active chat session.
+            if state.session?.isResponding == true {
+                throw NSError(domain: "ChatService", code: -3, userInfo: [NSLocalizedDescriptionKey: "Model is busy"])
+            }
+
+            switch state.model.availability {
+            case .available:
+                // Use a dedicated session for keyword generation so we don't pollute chat context.
+                let session = LanguageModelSession(instructions: systemPrompt)
+                let options = GenerationOptions(temperature: 0.4)
+                let response = try await session.respond(to: request, options: options)
+                return Self.parseMenuKeywords(from: response.content, desiredCount: targetCount)
+
+            case .unavailable(.deviceNotEligible):
+                throw NSError(domain: "ChatService", code: -10, userInfo: [NSLocalizedDescriptionKey: "This device doesn't support Apple Intelligence."])
+            case .unavailable(.appleIntelligenceNotEnabled):
+                throw NSError(domain: "ChatService", code: -11, userInfo: [NSLocalizedDescriptionKey: "Apple Intelligence is turned off in Settings."])
+            case .unavailable(.modelNotReady):
+                throw NSError(domain: "ChatService", code: -12, userInfo: [NSLocalizedDescriptionKey: "The on-device model is downloading or not ready yet."])
+            case .unavailable:
+                throw NSError(domain: "ChatService", code: -13, userInfo: [NSLocalizedDescriptionKey: "The on-device model is unavailable."])
+            }
+        } else {
+            throw NSError(domain: "ChatService", code: -20, userInfo: [NSLocalizedDescriptionKey: "On-device generation requires a newer OS version."])
+        }
+#else
+        throw NSError(domain: "ChatService", code: -21, userInfo: [NSLocalizedDescriptionKey: "FoundationModels framework is unavailable in this SDK."])
+#endif
+    }
+
     public func sendIntroductionIfNeeded() {
         guard messages.isEmpty else { return }
         guard !isTyping else { return }
@@ -207,6 +253,51 @@ Requirements:
         if #available(iOS 26.0, macOS 26.0, visionOS 26.0, *) {
             onDeviceStateBox = nil
         }
+    }
+
+    private static func parseMenuKeywords(from raw: String, desiredCount: Int) -> [String] {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+
+        var candidates: [String] = []
+
+        if let data = trimmed.data(using: .utf8) {
+            if let json = try? JSONSerialization.jsonObject(with: data),
+               let arr = json as? [Any] {
+                candidates = arr.compactMap { $0 as? String }
+            }
+        }
+
+        if candidates.isEmpty {
+            candidates = trimmed
+                .replacingOccurrences(of: "\r", with: "\n")
+                .split(whereSeparator: { $0 == "\n" || $0 == "," })
+                .map { String($0) }
+        }
+
+        func normalize(_ s: String) -> String? {
+            var v = s.trimmingCharacters(in: .whitespacesAndNewlines)
+            if v.hasPrefix("-") { v.removeFirst() }
+            if v.hasPrefix("•") { v.removeFirst() }
+            v = v.trimmingCharacters(in: .whitespacesAndNewlines)
+            v = v.trimmingCharacters(in: CharacterSet(charactersIn: "\"'`[](){}<>.:;!?") )
+            guard !v.isEmpty else { return nil }
+            guard v.rangeOfCharacter(from: .whitespacesAndNewlines) == nil else { return nil }
+            guard v.count <= 24 else { return nil }
+            return v
+        }
+
+        var seen = Set<String>()
+        var out: [String] = []
+        for c in candidates {
+            guard let n = normalize(c) else { continue }
+            let key = n.lowercased()
+            guard !seen.contains(key) else { continue }
+            seen.insert(key)
+            out.append(n)
+            if out.count >= desiredCount { break }
+        }
+        return out
     }
 }
 

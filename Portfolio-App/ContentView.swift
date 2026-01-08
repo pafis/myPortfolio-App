@@ -9,13 +9,13 @@ import SwiftUI
 
 /// This is the main "Content" View
 struct ContentView: View {
-    let balls: [Ball] = [
-        Ball(level: 1, name: "Info", view: AnyView(Info()), image: UIImage(), textSize: 12),
-        Ball(level: 1, name: "Services", view: AnyView(ServicesView()), image: UIImage(), textSize: 12),
-        Ball(level: 2, name: "Skills & Languages", view: AnyView(SkillsAndLanguagesView()), image: UIImage(), textSize: 14),
-        Ball(level: 2, name: "Professional Experience", view: AnyView(ExperienceView()), image: UIImage(), textSize: 12),
-        Ball(level: 2, name: "Education", view: AnyView(Education()), image: UIImage(), textSize: 15),
-        Ball(level: 3, name: "About me", view: AnyView(AboutMeView()), image: UIImage(resource: .meImage1X1), textSize: 25),
+    let menuItems: [PortfolioMenuItem] = [
+        PortfolioMenuItem(level: 1, name: "Info", view: AnyView(Info()), image: UIImage(), textSize: 12),
+        PortfolioMenuItem(level: 1, name: "Services", view: AnyView(ServicesView()), image: UIImage(), textSize: 12),
+        PortfolioMenuItem(level: 2, name: "Skills & Languages", view: AnyView(SkillsAndLanguagesView()), image: UIImage(), textSize: 14),
+        PortfolioMenuItem(level: 2, name: "Professional Experience", view: AnyView(ExperienceView()), image: UIImage(), textSize: 12),
+        PortfolioMenuItem(level: 2, name: "Education", view: AnyView(Education()), image: UIImage(), textSize: 15),
+        PortfolioMenuItem(level: 3, name: "About me", view: AnyView(AboutMeView()), image: UIImage(resource: .meImage1X1), textSize: 25),
     ]
 
     @State private var showChat: Bool = false
@@ -27,10 +27,29 @@ struct ContentView: View {
 
     @State private var chatDismissToken = UUID()
 
+    @State private var keywordTopics: [String] = []
+    @State private var isLoadingKeywordTopics: Bool = false
+    @State private var selectedMenuItem: PortfolioMenuItem? = nil
+    @State private var keywordRefreshTask: Task<Void, Never>? = nil
+
+    private let keywordRefreshInterval: UInt64 = 60 * 1_000_000_000 // 60s
+
     var body: some View {
         ZStack {
             // Background with integrated chat overlay
-            LavaMenuContainer(isChatFocused: showChat || isChatFieldFocused, chatService: chatService, showChatOverlay: showChatOverlay)
+            LavaMenuContainer(
+                menuItems: menuItems,
+                keywordItems: keywordTopics,
+                onSelectMenuItem: { item in
+                    selectedMenuItem = item
+                },
+                onSelectKeyword: { keyword in
+                    openChatAndAsk(keyword: keyword)
+                },
+                isChatFocused: showChat || isChatFieldFocused,
+                chatService: chatService,
+                showChatOverlay: showChatOverlay
+            )
                 .ignoresSafeArea()
 
             // Foreground: Floating Chat Controls
@@ -93,6 +112,81 @@ struct ContentView: View {
                 .padding(.trailing, 16)
                 .padding(.bottom, 16)
             }
+        }
+        .sheet(item: $selectedMenuItem) { item in
+            item.view
+        }
+        .onAppear {
+            startKeywordRefreshLoopIfNeeded()
+        }
+        .onDisappear {
+            keywordRefreshTask?.cancel()
+            keywordRefreshTask = nil
+        }
+    }
+
+    private func openChatAndAsk(keyword: String) {
+        let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        // Cancel any pending dismissal.
+        chatDismissToken = UUID()
+
+        if !showChat {
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
+                showChat = true
+            }
+            showChatOverlay = true
+            isChatFieldFocused = true
+        }
+
+        chatText = ""
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            chatService.sendMessage("Tell me about \(trimmed) in Pascal Fischer's portfolio.")
+        }
+    }
+
+    private func startKeywordRefreshLoopIfNeeded() {
+        guard keywordRefreshTask == nil else { return }
+
+        keywordRefreshTask = Task {
+            while !Task.isCancelled {
+                await refreshKeywordTopicsOnce()
+                do {
+                    try await Task.sleep(nanoseconds: keywordRefreshInterval)
+                } catch {
+                    break
+                }
+            }
+        }
+    }
+
+    private func refreshKeywordTopicsOnce() async {
+        if isLoadingKeywordTopics { return }
+        isLoadingKeywordTopics = true
+        defer { isLoadingKeywordTopics = false }
+
+        do {
+            let topics = try await chatService.generateMenuKeywords(count: 6)
+            await MainActor.run {
+                if !topics.isEmpty {
+                    keywordTopics = topics
+                }
+            }
+        } catch {
+            let nsError = error as NSError
+            // If keyword generation is permanently unavailable, stop the loop.
+            if nsError.domain == "ChatService", [-10, -11, -20, -21].contains(nsError.code) {
+                await MainActor.run {
+                    if keywordTopics.isEmpty {
+                        keywordTopics = ["Skills", "Experience", "Projects", "Leadership", "Relocation", "Education"]
+                    }
+                    keywordRefreshTask?.cancel()
+                    keywordRefreshTask = nil
+                }
+            }
+            // -3 (busy) / -12 (not ready) and other transient errors: just keep current topics.
+            print("Keyword generation error: \(error)")
         }
     }
 }

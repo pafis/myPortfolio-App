@@ -7,7 +7,10 @@
 import SwiftUI
 
 struct LavaMenuContainer: View {
-    let menuItems = ["Home", "About", "Work", "Labs", "Store", "Contact"]
+    let menuItems: [PortfolioMenuItem]
+    var keywordItems: [String] = []
+    var onSelectMenuItem: ((PortfolioMenuItem) -> Void)? = nil
+    var onSelectKeyword: ((String) -> Void)? = nil
     @State private var blobs: [MenuBlobState] = []
     var isChatFocused: Bool = false
     
@@ -21,7 +24,9 @@ struct LavaMenuContainer: View {
     
     @State private var lastSpawn: Date = .now
     @State private var nextSpawnDelay: TimeInterval = 1.0
-    @State private var queueIndex = 0
+    @State private var menuQueueIndex = 0
+    @State private var keywordQueueIndex = 0
+    @State private var lastSpawnWasMenuItem: Bool = false
 
     @State private var lastDummySpawn: Date = .now
     @State private var nextDummySpawnDelay: TimeInterval = 1.0
@@ -60,6 +65,8 @@ struct LavaMenuContainer: View {
         static let debrisY: ClosedRange<CGFloat> = -1...1
         static let debrisDamp: CGFloat = 0.96
         static let debrisUpwardBias: CGFloat = 0.02
+
+        static let tapMaxDistanceScale: CGFloat = 1.35
     }
 
     var body: some View {
@@ -87,20 +94,120 @@ struct LavaMenuContainer: View {
                         containerSize: geo.size
                     )
                 }
+
+                if !showChatOverlay {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onEnded { value in
+                                    handleTap(at: value.location)
+                                }
+                        )
+                }
             }
             .coordinateSpace(name: "lava")
             .onAppear { initialize(geo.size) }
             .onReceive(timer) { _ in update(geo.size) }
+            .onChange(of: keywordItems) { newValue in
+                syncKeywordBlobs(with: newValue)
+            }
         }
         .ignoresSafeArea(.all)
     }
 
     private func initialize(_ size: CGSize) {
-        blobs = menuItems.map { MenuBlobState(text: $0, isDummy: false) }
+        blobs = menuItems.map {
+            var b = MenuBlobState(text: $0.name, isDummy: false)
+            b.menuItemID = $0.id
+            return b
+        }
+
+        let initialKeywords = keywordItems
+        for k in initialKeywords {
+            blobs.append(MenuBlobState(text: k, isDummy: false))
+        }
+
         for _ in 0..<30 { blobs.append(MenuBlobState(text: "", isDummy: true)) }
 
         lastDummySpawn = .now
         nextDummySpawnDelay = Constants.dummyInitialDelay
+    }
+
+    private func syncKeywordBlobs(with keywords: [String]) {
+        // Avoid reshaping blob pools while chat is active/focused.
+        guard !showChatOverlay else { return }
+        guard !isChatFocused else { return }
+
+        let desired = keywords.filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        guard !desired.isEmpty else { return }
+
+        // Remove idle keyword blobs that are no longer desired.
+        let desiredSet = Set(desired)
+        for i in blobs.indices {
+            guard !blobs[i].isDummy else { continue }
+            guard blobs[i].menuItemID == nil else { continue }
+            guard blobs[i].messageID == nil else { continue }
+            guard blobs[i].status == .idle else { continue }
+            if !desiredSet.contains(blobs[i].text) {
+                blobs[i].isDummy = true
+                blobs[i].text = ""
+                blobs[i].menuItemID = nil
+            }
+        }
+
+        // Add missing keyword blobs by reusing idle dummies first.
+        let existingKeywords = Set(blobs.filter { !$0.isDummy && $0.menuItemID == nil && $0.messageID == nil }.map { $0.text })
+        let missing = desired.filter { !existingKeywords.contains($0) }
+        for k in missing {
+            if let idle = blobs.firstIndex(where: { $0.isDummy && $0.messageID == nil && ($0.status == .idle || $0.status == .debris) }) {
+                blobs[idle].isDummy = false
+                blobs[idle].text = k
+                blobs[idle].menuItemID = nil
+                blobs[idle].status = .idle
+                blobs[idle].targetPosition = nil
+                blobs[idle].isAnchored = false
+            } else {
+                blobs.append(MenuBlobState(text: k, isDummy: false))
+            }
+        }
+
+        keywordQueueIndex = 0
+    }
+
+    private func handleTap(at location: CGPoint) {
+        guard !showChatOverlay else { return }
+        guard !isChatFocused else { return }
+
+        var bestIndex: Int? = nil
+        var bestDistance: CGFloat = .greatestFiniteMagnitude
+
+        for i in blobs.indices {
+            let b = blobs[i]
+            guard !b.isDummy else { continue }
+            guard b.messageID == nil else { continue }
+            guard b.status == .rising || b.status == .returning else { continue }
+            guard !b.text.isEmpty else { continue }
+
+            let dx = b.position.x - location.x
+            let dy = b.position.y - location.y
+            let dist = sqrt(dx * dx + dy * dy)
+            let maxDist = max(44, b.baseRadius * Constants.tapMaxDistanceScale)
+            guard dist <= maxDist else { continue }
+            if dist < bestDistance {
+                bestDistance = dist
+                bestIndex = i
+            }
+        }
+
+        guard let idx = bestIndex else { return }
+
+        if let id = blobs[idx].menuItemID,
+           let item = menuItems.first(where: { $0.id == id }) {
+            onSelectMenuItem?(item)
+        } else {
+            onSelectKeyword?(blobs[idx].text)
+        }
     }
     
     private func getSafeSpawnX(in width: CGFloat) -> CGFloat {
@@ -252,13 +359,52 @@ struct LavaMenuContainer: View {
             
             // When field is not focused, allow spawning new blobs
             if now.timeIntervalSince(lastSpawn) > nextSpawnDelay {
-                if let i = blobs.firstIndex(where: { !$0.isDummy && $0.status == .idle && $0.text == menuItems[queueIndex] }) {
-                    let safeX = getSafeSpawnX(in: size.width)
+                let menuCount = menuItems.count
+                let keywordCount = keywordItems.count
 
-                    blobs[i].spawn(x: safeX, y: size.height + 360)
-                    queueIndex = (queueIndex + 1) % menuItems.count
+                func nextMenuIndex() -> Int? {
+                    guard menuCount > 0 else { return nil }
+                    let id = menuItems[menuQueueIndex % menuCount].id
+                    return blobs.firstIndex(where: { !$0.isDummy && $0.status == .idle && $0.menuItemID == id })
+                }
+
+                func nextKeywordIndex() -> Int? {
+                    guard keywordCount > 0 else { return nil }
+                    let key = keywordItems[keywordQueueIndex % keywordCount]
+                    return blobs.firstIndex(where: { !$0.isDummy && $0.status == .idle && $0.menuItemID == nil && $0.messageID == nil && $0.text == key })
+                }
+
+                let menuIdx = nextMenuIndex()
+                let keywordIdx = nextKeywordIndex()
+
+                let spawnMenu: Bool = {
+                    switch (menuIdx, keywordIdx) {
+                    case (.some, .some):
+                        // Mix sources deterministically.
+                        return !lastSpawnWasMenuItem
+                    case (.some, .none):
+                        return true
+                    case (.none, .some):
+                        return false
+                    case (.none, .none):
+                        return false
+                    }
+                }()
+
+                if spawnMenu, let i = menuIdx {
+                    let safeX = getSafeSpawnX(in: size.width)
+                    blobs[i].spawn(x: safeX, y: size.height + Constants.spawnStartYOffset)
+                    menuQueueIndex = (menuQueueIndex + 1) % max(1, menuCount)
+                    lastSpawnWasMenuItem = true
                     lastSpawn = now
-                    nextSpawnDelay = .random(in: 4.0...7.0)
+                    nextSpawnDelay = .random(in: Constants.menuSpawnDelay)
+                } else if let i = keywordIdx {
+                    let safeX = getSafeSpawnX(in: size.width)
+                    blobs[i].spawn(x: safeX, y: size.height + Constants.spawnStartYOffset)
+                    keywordQueueIndex = (keywordQueueIndex + 1) % max(1, keywordCount)
+                    lastSpawnWasMenuItem = false
+                    lastSpawn = now
+                    nextSpawnDelay = .random(in: Constants.menuSpawnDelay)
                 }
             }
 
@@ -344,7 +490,7 @@ struct LavaMenuContainer: View {
 
 struct LavaMenuContainer_Previews: PreviewProvider {
     static var previews: some View {
-        LavaMenuContainer(chatService: ChatService())
+        LavaMenuContainer(menuItems: [], chatService: ChatService())
             .previewLayout(.sizeThatFits)
             .padding()
     }

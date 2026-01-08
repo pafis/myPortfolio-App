@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-// Define a struct called Ball
-struct Ball {
+struct PortfolioMenuItem: Identifiable {
+    let id: UUID = UUID()
     // The level of the ball
     let level: Int
     // The name of the ball

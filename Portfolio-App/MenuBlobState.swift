@@ -31,6 +31,7 @@ public struct MenuBlobState: Identifiable {
     public let id = UUID()
     public var text: String
     public var isDummy: Bool
+    public var menuItemID: UUID? = nil
     public var baseRadius: CGFloat
     private let originalRadius: CGFloat
     public let baseSpeed: CGFloat
