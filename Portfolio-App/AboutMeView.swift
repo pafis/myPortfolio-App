@@ -31,8 +31,9 @@ struct AboutMeView: View {
         HStack(alignment: .center, spacing: 18) {
             Image("MeImage")
                 .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 80, height: 80)
+                .scaledToFill()
+                .frame(width: 80, height: 80, alignment: .top)
+                .clipped()
                 .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 22, style: .continuous)
@@ -42,7 +43,7 @@ struct AboutMeView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Pascal Fischer")
                     .font(.system(.title, design: .rounded).bold())
-                Text("Developer • Consultant")
+                Text("Software Engineer • Consultant")
                     .font(.system(.callout, design: .rounded))
                     .foregroundStyle(.secondary)
             }

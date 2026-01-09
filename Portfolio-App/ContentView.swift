@@ -33,7 +33,6 @@ struct ContentView: View {
 
     @State private var selectedMenuItem: PortfolioMenuItem? = nil
     @StateObject private var model = ContentViewModel()
-    @State private var detailDragOffsetY: CGFloat = 0
 
     var body: some View {
         ZStack {
@@ -54,7 +53,6 @@ struct ContentView: View {
                 debrisInView: $debrisInView,
                 typingOutInView: $typingOutInView,
                 isDetailOpen: selectedMenuItem != nil,
-                detailDragOffsetY: detailDragOffsetY,
                 chatService: chatService,
                 showChatOverlay: showChatOverlay,
                 showTypingIndicator: (chatService.isTyping || isLLMQueued)
@@ -142,17 +140,11 @@ struct ContentView: View {
                 BlobModalWrapper(isPresented: Binding(
                     get: { selectedMenuItem != nil },
                     set: { if !$0 { selectedMenuItem = nil } }
-                ), dragOffsetY: $detailDragOffsetY) {
+                )) {
                     PortfolioRouteView(route: item.route)
                 }
                 .zIndex(100) // Ensure it is on top
-                // Use .identity so the wrapper's internal transition (move from bottom) takes precedence
-                .transition(.identity) 
-                .onChange(of: selectedMenuItem != nil) { isOpen in
-                    if !isOpen {
-                        detailDragOffsetY = 0
-                    }
-                }
+                .transition(.opacity) // Blob wrapper handles its own animation mostly, but this helps appearing
             }
         }
         .onAppear {

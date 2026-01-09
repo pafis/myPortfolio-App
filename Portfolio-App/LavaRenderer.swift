@@ -212,8 +212,37 @@ public struct MetalLavaView: UIViewRepresentable {
 
         // Reservoir definition
         let reservoirY: Float = 1.16
-        let reservoirRadius: Float = 0.18
-        let reservoirXs: [Float] = [-0.15, 0.15, 0.50, 0.85, 1.15]
+        // Increased base radius so reservoir blobs overlap more and appear fuller
+        let reservoirRadius: Float = 0.24
+
+        // Dynamically compute reservoir X positions so wide/landscape layouts
+        // get more reservoir blobs. We start from a logical normalized span
+        // covering slightly beyond the viewport [-0.15 .. 1.15] (span = 1.3).
+        // Choose a target spacing in pixels to keep blobs visually dense but
+        // not overlapping. Larger screens will produce more blobs.
+        let reservoirSpan: Float = 1.30
+        let reservoirLeft: Float = -0.15
+        let targetSpacingPx: Float = 140.0 // desired spacing between reservoir centers in px
+        // Compute normalized spacing (in x normalized to width)
+        let spacingNormFromPx = max(0.01, targetSpacingPx / width)
+        // To ensure horizontal overlap we must account for aspect scaling used in the shader:
+        // shader scales x by aspect = width/height while radii are normalized to height.
+        // For two circles to overlap horizontally: dx_norm * aspect < 2 * reservoirRadius
+        // => dx_norm < 2 * reservoirRadius / aspect = 2 * reservoirRadius * (height/width)
+        let aspect = width > 0 ? (width / height) : 1.0
+        let maxSpacingForOverlap = 2.0 * reservoirRadius * (height / width) * 0.95
+        let spacingNorm = min(spacingNormFromPx, maxSpacingForOverlap)
+        // Ensure spacingNorm is not tiny or zero
+        let finalSpacingNorm = max(0.01, spacingNorm)
+        let countFloat = reservoirSpan / finalSpacingNorm
+        let reservoirCount = max(5, Int(ceil(countFloat)))
+        var reservoirXs: [Float] = []
+        if reservoirCount <= 1 {
+            reservoirXs = [reservoirLeft + reservoirSpan * 0.5]
+        } else {
+            let step = reservoirSpan / Float(reservoirCount - 1)
+            reservoirXs = (0..<reservoirCount).map { i in reservoirLeft + Float(i) * step }
+        }
 
         func wobbleOffsetPx(seed: Float) -> SIMD2<Float> {
             // Keep wobble in pixel space so it matches label wobble exactly.
@@ -318,14 +347,60 @@ public struct MetalLavaView: UIViewRepresentable {
         // Reservoir: a bottom pool made from multiple large circle blobs.
         // This spans left→right and keeps an organic (non-rect) silhouette.
         if showReservoir {
-            for x in reservoirXs {
+            // Primary row
+            for (i, x) in reservoirXs.enumerated() {
+                let seed = Float(i) * 1.2345
+                let wob = wobbleOffsetPx(seed: seed)
+                let px = x * width + wob.x
+                let py = reservoirY * height + wob.y
+                let pos = SIMD2(px / width, py / height)
                 context.coordinator.scratch.append(
                     BlobData(
-                        position: SIMD2(x, reservoirY),
+                        position: pos,
                         size: SIMD2(reservoirRadius, 0.0),
-                        params: SIMD4(0.0, 0.0, 0.0, 0.0)
+                        params: SIMD4(0.0, 0.0, seed, 0.0)
                     )
                 )
+            }
+
+            // Add a staggered second row (half-step horizontally) to remove gaps on wide screens
+            if reservoirXs.count >= 2 {
+                let step: Float = reservoirXs[1] - reservoirXs[0]
+                let halfStep = step * 0.5
+                let secondRowY = reservoirY + 0.035
+                for (i, x) in reservoirXs.enumerated() {
+                    let seed = Float(i) * 1.2345 + 5.0
+                    let wob = wobbleOffsetPx(seed: seed)
+                    let px = (x + halfStep) * width + wob.x
+                    let py = secondRowY * height + wob.y
+                    let pos = SIMD2(px / width, py / height)
+                    context.coordinator.scratch.append(
+                        BlobData(
+                            position: pos,
+                            size: SIMD2(reservoirRadius * 0.95, 0.0),
+                            params: SIMD4(0.0, 0.0, seed, 0.0)
+                        )
+                    )
+                }
+            }
+
+            // For very wide screens, add a third row to ensure continuous coverage
+            if reservoirXs.count >= 4 && width / height > 1.6 {
+                let thirdRowY = reservoirY + 0.07
+                for (i, x) in reservoirXs.enumerated() {
+                    let seed = Float(i) * 1.2345 + 9.0
+                    let wob = wobbleOffsetPx(seed: seed)
+                    let px = x * width + wob.x
+                    let py = thirdRowY * height + wob.y
+                    let pos = SIMD2(px / width, py / height)
+                    context.coordinator.scratch.append(
+                        BlobData(
+                            position: pos,
+                            size: SIMD2(reservoirRadius * 0.9, 0.0),
+                            params: SIMD4(0.0, 0.0, seed, 0.0)
+                        )
+                    )
+                }
             }
         }
 
