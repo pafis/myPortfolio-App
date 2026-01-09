@@ -52,7 +52,7 @@ struct SkillsAndLanguagesView: View {
                                             ForEach(tile.skills, id: \.id) { skill in
                                                 GeometryReader { geometry in
 
-                                                    ProgressView(progress: skill.progress, text: skill.name, strokeLineWidth: 10).frame(width: 150, height: 150)
+                                                    CircularProgressView(progress: skill.progress, text: skill.name, strokeLineWidth: 10).frame(width: 150, height: 150)
                                                         .background {
                                                             Color.secondary.opacity(skill.progress)
                                                         }.clipShape(RoundedRectangle(cornerRadius: 30))

@@ -7,18 +7,13 @@
 
 import SwiftUI
 
-/// A view that displays a circular progress indicator.
-struct ProgressView: View {
-    /// Whether the progress indicator is currently animating.
+struct CircularProgressView: View {
     @State var isAnimating = false
 
-    /// The progress of the progress indicator, represented as a percentage.
     @State var progress: CGFloat = 0.3
 
-    /// The text displayed inside the progress indicator.
     @State var text: String = "Test"
 
-    /// The width of the stroke line used to draw the progress indicator.
     @State var strokeLineWidth: CGFloat = 30
 
     var body: some View {
@@ -47,5 +42,5 @@ struct ProgressView: View {
 }
 
 #Preview {
-    ProgressView()
+    CircularProgressView()
 }

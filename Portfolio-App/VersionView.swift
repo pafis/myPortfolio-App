@@ -49,5 +49,13 @@ struct VersionView: View {
 }
 
 #Preview {
-    VersionView(currentView: Info().$currentView)
+    struct PreviewHost: View {
+        @State private var currentView: Info.InfoNavigationEnum = .version
+
+        var body: some View {
+            VersionView(currentView: $currentView)
+        }
+    }
+
+    return PreviewHost()
 }

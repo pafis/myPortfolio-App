@@ -7,15 +7,14 @@
 
 import SwiftUI
 
-/// This is the main "Content" View
 struct ContentView: View {
     let menuItems: [PortfolioMenuItem] = [
-        PortfolioMenuItem(name: "Info", view: AnyView(Info())),
-        PortfolioMenuItem(name: "Services", view: AnyView(ServicesView())),
-        PortfolioMenuItem(name: "Skills & Languages", view: AnyView(SkillsAndLanguagesView())),
-        PortfolioMenuItem(name: "Professional Experience", view: AnyView(ExperienceView())),
-        PortfolioMenuItem(name: "Education", view: AnyView(Education())),
-        PortfolioMenuItem(name: "About me", view: AnyView(AboutMeView())),
+        PortfolioMenuItem(name: "Info", route: .info),
+        PortfolioMenuItem(name: "Services", route: .services),
+        PortfolioMenuItem(name: "Skills & Languages", route: .skillsAndLanguages),
+        PortfolioMenuItem(name: "Professional Experience", route: .experience),
+        PortfolioMenuItem(name: "Education", route: .education),
+        PortfolioMenuItem(name: "About me", route: .aboutMe),
     ]
 
     @State private var showChat: Bool = false
@@ -32,19 +31,15 @@ struct ContentView: View {
     @State private var typingOutInView: Bool = false
     @State private var pendingAssistantCommitToken = UUID()
 
-    @State private var keywordTopics: [ChatService.MenuKeyword] = []
-    @State private var isLoadingKeywordTopics: Bool = false
     @State private var selectedMenuItem: PortfolioMenuItem? = nil
-    @State private var keywordRefreshTask: Task<Void, Never>? = nil
-
-    private let keywordRefreshInterval: UInt64 = 60 * 1_000_000_000 // 60s
+    @StateObject private var model = ContentViewModel()
 
     var body: some View {
         ZStack {
             // Background with integrated chat overlay
             LavaMenuContainer(
                 menuItems: menuItems,
-                keywordItems: keywordTopics,
+                keywordItems: model.keywordTopics,
                 onSelectMenuItem: { item in
                     selectedMenuItem = item
                 },
@@ -133,10 +128,10 @@ struct ContentView: View {
             }
         }
         .sheet(item: $selectedMenuItem) { item in
-            item.view
+            PortfolioRouteView(route: item.route)
         }
         .onAppear {
-            startKeywordRefreshLoopIfNeeded()
+            model.startKeywordRefreshLoopIfNeeded(chatService: chatService)
         }
         .onChange(of: chatService.pendingAssistantReply) { newValue in
             guard newValue != nil else { return }
@@ -156,8 +151,7 @@ struct ContentView: View {
             }
         }
         .onDisappear {
-            keywordRefreshTask?.cancel()
-            keywordRefreshTask = nil
+            model.stopKeywordRefreshLoop()
         }
     }
 
@@ -233,61 +227,26 @@ struct ContentView: View {
         }
     }
 
-    private func startKeywordRefreshLoopIfNeeded() {
-        guard keywordRefreshTask == nil else { return }
+}
 
-        keywordRefreshTask = Task {
-            while !Task.isCancelled {
-                await refreshKeywordTopicsOnce()
-                do {
-                    try await Task.sleep(nanoseconds: keywordRefreshInterval)
-                } catch {
-                    break
-                }
-            }
-        }
-    }
+private struct PortfolioRouteView: View {
+    let route: PortfolioRoute
 
-    private func refreshKeywordTopicsOnce() async {
-        if isLoadingKeywordTopics { return }
-        isLoadingKeywordTopics = true
-        defer { isLoadingKeywordTopics = false }
-
-        do {
-            let topics = try await chatService.generateMenuKeywords(count: 6)
-            await MainActor.run {
-                if !topics.isEmpty {
-                    keywordTopics = topics
-                }
-            }
-        } catch {
-            let nsError = error as NSError
-            // If keyword generation is permanently unavailable, stop the loop.
-            if nsError.domain == "ChatService", [-10, -11, -20, -21].contains(nsError.code) {
-                await MainActor.run {
-                    if keywordTopics.isEmpty {
-                        keywordTopics = defaultKeywordTopics()
-                    }
-                    keywordRefreshTask?.cancel()
-                    keywordRefreshTask = nil
-                }
-            }
-            // -3 (busy) / -12 (not ready) and other transient errors: just keep current topics.
-            print("Keyword generation error: \(error)")
-        }
-    }
-
-    private func defaultKeywordTopics() -> [ChatService.MenuKeyword] {
-        let topics = [
-            "Tech Stack",
-            "Work Experience",
-            "Featured Projects",
-            "Key Skills",
-            "Leadership Style",
-            "Education Background",
-        ]
-        return topics.map { t in
-            ChatService.MenuKeyword(keyword: t, question: "What can you tell me about \(t) in Pascal Fischer's portfolio?")
+    @ViewBuilder
+    var body: some View {
+        switch route {
+        case .info:
+            Info()
+        case .services:
+            ServicesView()
+        case .skillsAndLanguages:
+            SkillsAndLanguagesView()
+        case .experience:
+            ExperienceView()
+        case .education:
+            Education()
+        case .aboutMe:
+            AboutMeView()
         }
     }
 }

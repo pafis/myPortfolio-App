@@ -7,13 +7,12 @@
 
 import SwiftUI
 
-/// This is the Imprint View
-import SwiftUI
-
-/// This is the Imprint View
 struct ImprintView: View {
-    /// The current view binding
     @Binding var currentView: Info.InfoNavigationEnum
+
+    private var imprintText: AttributedString? {
+        RTFResourceLoader.loadAttributedString(named: "Imprint")
+    }
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -31,14 +30,26 @@ struct ImprintView: View {
 
             }.padding(.bottom, 5)
             TileDetailsView(title: "Imprint") {
-                let licenseText = try? NSAttributedString(url: Bundle.main.url(forResource: "Imprint", withExtension: "rtf")!, options: [:], documentAttributes: nil)
-
-                let convertedAttrString = try? AttributedString(licenseText ?? NSAttributedString(string: ""), including: \.uiKit)
+                if let imprintText {
+                    Text(imprintText)
+                        .padding(10)
+                } else {
+                    Text("Imprint content not available.")
+                        .padding(10)
+                }
             }
         }
     }
 }
 
 #Preview {
-    ImprintView(currentView: Info().$currentView)
+    struct PreviewHost: View {
+        @State private var currentView: Info.InfoNavigationEnum = .imprint
+
+        var body: some View {
+            ImprintView(currentView: $currentView)
+        }
+    }
+
+    return PreviewHost()
 }

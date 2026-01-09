@@ -7,12 +7,8 @@
 
 import SwiftUI
 
-import SwiftUI
-
-/// This is the Info View
 struct Info: View {
-    /// The current view state
-    @State var currentView: InfoNavigationEnum = .main
+    @State private var currentView: InfoNavigationEnum = .main
 
     /// The possible views for the Info View
     enum InfoNavigationEnum {

@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-import SwiftUI
-
-/// This is the LicensesView
 struct LicensesView: View {
-    /// The current view binding
     @Binding var currentView: Info.InfoNavigationEnum
+
+    private var licenseText: AttributedString? {
+        RTFResourceLoader.loadAttributedString(named: "Licenses")
+    }
 
     var body: some View {
         VStack(alignment: .leading) {
@@ -30,16 +30,26 @@ struct LicensesView: View {
 
             }.padding(.bottom, 5)
             TileDetailsView(title: "Licenses") {
-                let licenseText = try? NSAttributedString(url: Bundle.main.url(forResource: "Licenses", withExtension: "rtf")!, options: [:], documentAttributes: nil)
-
-                let a = try? AttributedString(licenseText ?? NSAttributedString(string: ""), including: \.uiKit)
-
-                Text(a ?? "").padding(10)
+                if let licenseText {
+                    Text(licenseText)
+                        .padding(10)
+                } else {
+                    Text("License content not available.")
+                        .padding(10)
+                }
             }
         }
     }
 }
 
 #Preview {
-    LicensesView(currentView: Info().$currentView)
+    struct PreviewHost: View {
+        @State private var currentView: Info.InfoNavigationEnum = .licenses
+
+        var body: some View {
+            LicensesView(currentView: $currentView)
+        }
+    }
+
+    return PreviewHost()
 }

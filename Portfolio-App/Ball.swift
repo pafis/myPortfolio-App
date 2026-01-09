@@ -9,8 +9,6 @@ import SwiftUI
 
 struct PortfolioMenuItem: Identifiable {
     let id: UUID = UUID()
-    // The name of the ball
     let name: String
-    // The view of the ball
-    let view: AnyView
+    let route: PortfolioRoute
 }

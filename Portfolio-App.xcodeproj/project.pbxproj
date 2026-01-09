@@ -28,6 +28,9 @@
 		0C727EB92A577BA900C0CABC /* Ball.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C727EB82A577BA900C0CABC /* Ball.swift */; };
 		0C7820B12A413F7D003DE643 /* AboutMeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C7820B02A413F7D003DE643 /* AboutMeView.swift */; };
 		0CA1892B2F113107007D62B3 /* KeywordValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA1892A2F113107007D62B3 /* KeywordValidation.swift */; };
+		0CA1892E2F1137EE007D62B3 /* PortfolioRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA1892D2F1137EE007D62B3 /* PortfolioRoute.swift */; };
+		0CA1892F2F1137EE007D62B3 /* ContentViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA1892C2F1137EE007D62B3 /* ContentViewModel.swift */; };
+		0CA189312F113821007D62B3 /* RTFResourceLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA189302F113821007D62B3 /* RTFResourceLoader.swift */; };
 		0CABFC9C2F08872B007D30C1 /* LavaRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFC9A2F08872B007D30C1 /* LavaRenderer.swift */; };
 		0CABFC9D2F08872B007D30C1 /* LavaMenuContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFC992F08872B007D30C1 /* LavaMenuContainer.swift */; };
 		0CABFC9E2F08872B007D30C1 /* MenuBlobState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFC9B2F08872B007D30C1 /* MenuBlobState.swift */; };
@@ -68,6 +71,9 @@
 		0C727EB82A577BA900C0CABC /* Ball.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ball.swift; sourceTree = "<group>"; };
 		0C7820B02A413F7D003DE643 /* AboutMeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutMeView.swift; sourceTree = "<group>"; };
 		0CA1892A2F113107007D62B3 /* KeywordValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeywordValidation.swift; sourceTree = "<group>"; };
+		0CA1892C2F1137EE007D62B3 /* ContentViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewModel.swift; sourceTree = "<group>"; };
+		0CA1892D2F1137EE007D62B3 /* PortfolioRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortfolioRoute.swift; sourceTree = "<group>"; };
+		0CA189302F113821007D62B3 /* RTFResourceLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RTFResourceLoader.swift; path = Utilities/RTFResourceLoader.swift; sourceTree = "<group>"; };
 		0CABFC992F08872B007D30C1 /* LavaMenuContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LavaMenuContainer.swift; sourceTree = "<group>"; };
 		0CABFC9A2F08872B007D30C1 /* LavaRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LavaRenderer.swift; sourceTree = "<group>"; };
 		0CABFC9B2F08872B007D30C1 /* MenuBlobState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBlobState.swift; sourceTree = "<group>"; };
@@ -122,6 +128,9 @@
 		0CCBF7462A3C645B00CCD315 /* Portfolio-App */ = {
 			isa = PBXGroup;
 			children = (
+				0CA189302F113821007D62B3 /* RTFResourceLoader.swift */,
+				0CA1892C2F1137EE007D62B3 /* ContentViewModel.swift */,
+				0CA1892D2F1137EE007D62B3 /* PortfolioRoute.swift */,
 				0CABFCC52F0D1D6E007D30C1 /* ChatSystemPrompt.swift */,
 				0CABFCB72F0C031C007D30C1 /* ChatService.swift */,
 				0CA1892A2F113107007D62B3 /* KeywordValidation.swift */,
@@ -261,6 +270,7 @@
 				0C727EAB2A5778E600C0CABC /* CVEvent.swift in Sources */,
 				0CC4E5B42A49FE6A00F1D7A7 /* ComposeEmailView.swift in Sources */,
 				0CABFCB82F0C0322007D30C1 /* ChatService.swift in Sources */,
+				0CA189312F113821007D62B3 /* RTFResourceLoader.swift in Sources */,
 				0CC4E5B82A4A248E00F1D7A7 /* Education.swift in Sources */,
 				0CCBF74A2A3C645B00CCD315 /* ContentView.swift in Sources */,
 				0C571DEB2A4D179B00FD082E /* BackgroundView.swift in Sources */,
@@ -283,6 +293,8 @@
 				0C571DE92A4CF40700FD082E /* ProgressView.swift in Sources */,
 				0CABFC9C2F08872B007D30C1 /* LavaRenderer.swift in Sources */,
 				0CABFC9D2F08872B007D30C1 /* LavaMenuContainer.swift in Sources */,
+				0CA1892E2F1137EE007D62B3 /* PortfolioRoute.swift in Sources */,
+				0CA1892F2F1137EE007D62B3 /* ContentViewModel.swift in Sources */,
 				0CABFC9E2F08872B007D30C1 /* MenuBlobState.swift in Sources */,
 				0CEE52AB2A561807004FCD51 /* Info.swift in Sources */,
 			);
