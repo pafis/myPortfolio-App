@@ -8,17 +8,24 @@ import SwiftUI
 
 struct LavaMenuContainer: View {
     let menuItems: [PortfolioMenuItem]
-    var keywordItems: [String] = []
+    var keywordItems: [ChatService.MenuKeyword] = []
     var onSelectMenuItem: ((PortfolioMenuItem) -> Void)? = nil
-    var onSelectKeyword: ((String) -> Void)? = nil
+    var onSelectKeyword: ((ChatService.MenuKeyword) -> Void)? = nil
     @State private var blobs: [MenuBlobState] = []
     var isChatFocused: Bool = false
+    @Binding var debrisInView: Bool
+    @Binding var typingOutInView: Bool
     
     // Chat integration
     @ObservedObject var chatService: ChatService
     var showChatOverlay: Bool = false
+    var showTypingIndicator: Bool = false
 
     @State private var wasFocused: Bool = false
+
+    // Shared wobble time base so blob rendering and label rendering stay in sync.
+    @State private var wobbleStart: Date = .now
+    @State private var wobbleTime: Float = 0
 
     @State private var timer = Timer.publish(every: Constants.timerHz, on: .main, in: .common).autoconnect()
     
@@ -46,9 +53,10 @@ struct LavaMenuContainer: View {
         static let resetOffscreenY: CGFloat = -100
 
         static let spawnStartYOffset: CGFloat = 360
-        static let menuSpawnDelay: ClosedRange<TimeInterval> = 4.0...7.0
+        static let menuSpawnDelay: ClosedRange<TimeInterval> = 9.0...15.0
 
-        static let maxActiveDummies: Int = 4
+        // Keep only a tiny amount of background dummy blobs.
+        static let maxActiveDummies: Int = 2
         static let dummyInitialDelay: TimeInterval = 0.2
         static let dummySpawnDelay: ClosedRange<TimeInterval> = 1.0...2.0
         static let dummySpawnBackoffDelay: ClosedRange<TimeInterval> = 1.5...3.0
@@ -67,22 +75,50 @@ struct LavaMenuContainer: View {
         static let debrisUpwardBias: CGFloat = 0.02
 
         static let tapMaxDistanceScale: CGFloat = 1.35
+
+        // Fluid dynamics (menu/keyword/dummy blobs only)
+        // - `fluidFollow` controls how quickly blobs respond to target speed (lower = more resistance).
+        // - `fluidDrag` damps velocity each frame (closer to 1 = less damping).
+        static let fluidFollow: CGFloat = 0.10
+        static let fluidDrag: CGFloat = 0.985
+        static let lateralCurrentPxPerSec: CGFloat = 14
+
+        // "Lava lamp" heat model (y increases downward)
+        static let heaterBandStart: CGFloat = 0.70 // bottom portion that's "hot"
+        static let heatUpRate: CGFloat = 1.6       // per second
+        static let coolDownRate: CGFloat = 0.35    // per second
+
+        // Buoyancy model
+        static let buoyancyMin: CGFloat = 0.15     // baseline lift even when cooler
+        static let buoyancyMax: CGFloat = 1.0      // max lift when fully hot
+
+        // Overall rise rate multiplier.
+        static let riseBoost: CGFloat = 1.55
+
+        // Recycling thresholds
+        static let topExitPadding: CGFloat = 180
+        static let bottomRecyclePadding: CGFloat = 140
+
+        // Typing indicator message ID (stable)
+        static let typingMessageID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+        static let typingExitPadding: CGFloat = 160
     }
 
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                MetalLavaView(blobs: blobs, containerSize: geo.size)
+                MetalLavaView(blobs: blobs, containerSize: geo.size, time: wobbleTime)
                     .ignoresSafeArea(.all)
               
                 ForEach(blobs.indices, id: \.self) { i in
                     let b = blobs[i]
                     if (b.status == .rising || b.status == .fleeing || b.status == .returning) && !b.isDummy {
+                        let wobble = wobbleOffset(seed: b.wobbleSeed, time: wobbleTime, containerHeight: geo.size.height)
                         Text(b.text)
                             .font(.system(size: 14, weight: .bold, design: .rounded))
                             .foregroundColor(.white)
                             .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-                            .position(b.position)
+                            .position(x: b.position.x + wobble.width, y: b.position.y + wobble.height)
                     }
                 }
                 
@@ -91,7 +127,8 @@ struct LavaMenuContainer: View {
                     ChatScrollOverlay(
                         chatService: chatService,
                         blobs: $blobs,
-                        containerSize: geo.size
+                        containerSize: geo.size,
+                        showTypingIndicator: showTypingIndicator
                     )
                 }
 
@@ -107,13 +144,25 @@ struct LavaMenuContainer: View {
                 }
             }
             .coordinateSpace(name: "lava")
-            .onAppear { initialize(geo.size) }
+            .onAppear {
+                wobbleStart = .now
+                wobbleTime = 0
+                initialize(geo.size)
+            }
             .onReceive(timer) { _ in update(geo.size) }
             .onChange(of: keywordItems) { newValue in
                 syncKeywordBlobs(with: newValue)
             }
         }
         .ignoresSafeArea(.all)
+    }
+
+    private func wobbleOffset(seed: Float, time: Float, containerHeight: CGFloat) -> CGSize {
+        // Matches the wobble applied when packing BlobData in MetalLavaView.
+        let ampPx = CGFloat(0.008) * containerHeight
+        let dx = CGFloat(sin(Double(time * 1.2 + seed))) * ampPx
+        let dy = CGFloat(cos(Double(time * 0.9 + seed))) * ampPx
+        return CGSize(width: dx, height: dy)
     }
 
     private func initialize(_ size: CGSize) {
@@ -123,9 +172,9 @@ struct LavaMenuContainer: View {
             return b
         }
 
-        let initialKeywords = keywordItems
+        let initialKeywords = keywordItems.filter { isValidKeywordText($0.keyword) }
         for k in initialKeywords {
-            blobs.append(MenuBlobState(text: k, isDummy: false))
+            blobs.append(MenuBlobState(text: k.keyword, isDummy: false))
         }
 
         for _ in 0..<30 { blobs.append(MenuBlobState(text: "", isDummy: true)) }
@@ -134,12 +183,12 @@ struct LavaMenuContainer: View {
         nextDummySpawnDelay = Constants.dummyInitialDelay
     }
 
-    private func syncKeywordBlobs(with keywords: [String]) {
+    private func syncKeywordBlobs(with keywords: [ChatService.MenuKeyword]) {
         // Avoid reshaping blob pools while chat is active/focused.
         guard !showChatOverlay else { return }
         guard !isChatFocused else { return }
 
-        let desired = keywords.filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        let desired = keywords.map { $0.keyword }.filter { isValidKeywordText($0) }
         guard !desired.isEmpty else { return }
 
         // Remove idle keyword blobs that are no longer desired.
@@ -162,7 +211,7 @@ struct LavaMenuContainer: View {
         for k in missing {
             if let idle = blobs.firstIndex(where: { $0.isDummy && $0.messageID == nil && ($0.status == .idle || $0.status == .debris) }) {
                 blobs[idle].isDummy = false
-                blobs[idle].text = k
+                blobs[idle].setLabelText(k, fontSize: 14)
                 blobs[idle].menuItemID = nil
                 blobs[idle].status = .idle
                 blobs[idle].targetPosition = nil
@@ -173,6 +222,10 @@ struct LavaMenuContainer: View {
         }
 
         keywordQueueIndex = 0
+    }
+
+    private func isValidKeywordText(_ raw: String) -> Bool {
+        KeywordValidation.normalizeTwoWordKeyword(raw) != nil
     }
 
     private func handleTap(at location: CGPoint) {
@@ -206,7 +259,13 @@ struct LavaMenuContainer: View {
            let item = menuItems.first(where: { $0.id == id }) {
             onSelectMenuItem?(item)
         } else {
-            onSelectKeyword?(blobs[idx].text)
+            if let kw = keywordItems.first(where: { $0.keyword == blobs[idx].text }) {
+                onSelectKeyword?(kw)
+            } else {
+                // Fallback: synthesize a MenuKeyword if none exists in the current list
+                let synthesized = ChatService.MenuKeyword(keyword: blobs[idx].text, question: "What can you tell me about \(blobs[idx].text) in Pascal Fischer's portfolio?")
+                onSelectKeyword?(synthesized)
+            }
         }
     }
     
@@ -286,8 +345,34 @@ struct LavaMenuContainer: View {
                     blobs[i].position = target
                 }
             } else if blobs[i].status == .dismissing {
-                blobs[i].position.y -= blobs[i].currentSpeed
-                if blobs[i].position.y < Constants.resetOffscreenY {
+                if blobs[i].messageID == Constants.typingMessageID {
+                    blobs[i].position.x -= max(blobs[i].currentSpeed, 16)
+                    if blobs[i].position.x < -Constants.typingExitPadding {
+                        blobs[i].status = .idle
+                        blobs[i].messageID = nil
+                        blobs[i].chatRole = nil
+                        blobs[i].isDummy = true
+                        blobs[i].text = ""
+                        blobs[i].isAnchored = false
+                        blobs[i].targetPosition = nil
+                        blobs[i].bubbleWidth = 0
+                        blobs[i].bubbleHeight = 0
+                    }
+                } else {
+                    blobs[i].position.y -= blobs[i].currentSpeed
+                    if blobs[i].position.y < Constants.resetOffscreenY {
+                        blobs[i].status = .idle
+                        blobs[i].messageID = nil
+                        blobs[i].chatRole = nil
+                        blobs[i].isDummy = true
+                        blobs[i].text = ""
+                        blobs[i].isAnchored = false
+                        blobs[i].targetPosition = nil
+                        blobs[i].bubbleWidth = 0
+                        blobs[i].bubbleHeight = 0
+                    }
+                }
+                if blobs[i].status == .idle {
                     blobs[i].status = .idle
                     blobs[i].messageID = nil
                     blobs[i].chatRole = nil
@@ -304,6 +389,9 @@ struct LavaMenuContainer: View {
 
     private func update(_ size: CGSize) {
         let now = Date()
+        wobbleTime = Float(now.timeIntervalSince(wobbleStart))
+
+        let dt = Constants.timerHz
 
         // Capture previous positions for velocity computation.
         for i in blobs.indices {
@@ -312,6 +400,12 @@ struct LavaMenuContainer: View {
 
         handleChatOverlayDismissal(size)
         stepChatBlobs()
+
+        // Expose whether the typing indicator blob is currently animating out.
+        let typingOut = blobs.contains(where: { $0.messageID == Constants.typingMessageID && $0.status == .dismissing })
+        if typingOut != typingOutInView {
+            typingOutInView = typingOut
+        }
         
         // If focus just started, tell all active blobs to flee sideways
         if isChatFocused {
@@ -370,7 +464,7 @@ struct LavaMenuContainer: View {
 
                 func nextKeywordIndex() -> Int? {
                     guard keywordCount > 0 else { return nil }
-                    let key = keywordItems[keywordQueueIndex % keywordCount]
+                    let key = keywordItems[keywordQueueIndex % keywordCount].keyword
                     return blobs.firstIndex(where: { !$0.isDummy && $0.status == .idle && $0.menuItemID == nil && $0.messageID == nil && $0.text == key })
                 }
 
@@ -408,15 +502,16 @@ struct LavaMenuContainer: View {
                 }
             }
 
-            if now.timeIntervalSince(lastDummySpawn) > nextDummySpawnDelay {
+            if Constants.maxActiveDummies > 0, now.timeIntervalSince(lastDummySpawn) > nextDummySpawnDelay {
                 let activeDummyCount = blobs.filter { $0.isDummy && $0.status != .idle }.count
-                if activeDummyCount < 4, let i = blobs.firstIndex(where: { $0.isDummy && $0.status == .idle }) {
+                if activeDummyCount < Constants.maxActiveDummies,
+                   let i = blobs.firstIndex(where: { $0.isDummy && $0.status == .idle }) {
                     blobs[i].spawn(x: .random(in: 40...size.width-40), y: size.height + 360)
                     lastDummySpawn = now
-                    nextDummySpawnDelay = .random(in: 1.0...2.0)
+                    nextDummySpawnDelay = .random(in: Constants.dummySpawnDelay)
                 } else {
                     lastDummySpawn = now
-                    nextDummySpawnDelay = .random(in: 1.5...3.0)
+                    nextDummySpawnDelay = .random(in: Constants.dummySpawnBackoffDelay)
                 }
             }
         }
@@ -426,8 +521,62 @@ struct LavaMenuContainer: View {
         for i in blobs.indices where blobs[i].status != .idle {
             switch blobs[i].status {
             case .rising:
-                blobs[i].position.y -= blobs[i].currentSpeed
-                if blobs[i].position.y < 0 { if blobs[i].isDummy { blobs[i].status = .waiting} else { blobs[i].status = .idle}  }
+                // --- Revised "lava lamp" physics ---
+                // 1) Thermal expansion: heat rises from the bottom heater band.
+                // 2) Buoyancy (Archimedes): hotter => less dense => more upward lift.
+                // 3) Cooling near top reduces buoyancy, transitioning to waiting/sinking.
+
+                // Update temperature for non-chat blobs only.
+                if blobs[i].status != .chatBubble && blobs[i].status != .spawningToChat && blobs[i].status != .dismissing {
+                    let yN = (size.height > 0) ? (blobs[i].position.y / size.height) : 0
+                    if yN >= Constants.heaterBandStart {
+                        // Heat up near the bottom.
+                        blobs[i].temperature += (1.0 - blobs[i].temperature) * Constants.heatUpRate * dt
+                    } else if yN <= 0.25 {
+                        // Only start cooling when the blob is near the top.
+                        // This keeps blobs buoyant through most of the ascent.
+                        blobs[i].temperature += (0.0 - blobs[i].temperature) * Constants.coolDownRate * dt
+                    } else {
+                        // Mid-column: keep heat almost constant (very slow cooling).
+                        blobs[i].temperature += (0.0 - blobs[i].temperature) * (Constants.coolDownRate * 0.08) * dt
+                    }
+                    blobs[i].temperature = min(1, max(0, blobs[i].temperature))
+                }
+
+                // Convert currentSpeed (points/tick) to a baseline target points/second.
+                let invDt = CGFloat(1.0 / max(dt, 1.0 / 240.0))
+                let baseVy = -blobs[i].currentSpeed * invDt
+                let buoyancy = Constants.buoyancyMin + (Constants.buoyancyMax - Constants.buoyancyMin) * blobs[i].temperature
+                let targetVy = baseVy * buoyancy * Constants.riseBoost
+
+                // Gentle horizontal current (adds organic drift).
+                let currentVx = CGFloat(sin(Double(wobbleTime * 0.35 + blobs[i].wobbleSeed))) * Constants.lateralCurrentPxPerSec
+
+                let follow = Constants.fluidFollow
+                blobs[i].simVelocity.dx += (currentVx - blobs[i].simVelocity.dx) * follow
+                blobs[i].simVelocity.dy += (targetVy - blobs[i].simVelocity.dy) * follow
+
+                // Viscous drag.
+                blobs[i].simVelocity.dx *= Constants.fluidDrag
+                blobs[i].simVelocity.dy *= Constants.fluidDrag
+
+                blobs[i].position.x += blobs[i].simVelocity.dx * CGFloat(dt)
+                blobs[i].position.y += blobs[i].simVelocity.dy * CGFloat(dt)
+
+                // Let blobs fully exit beyond the top before recycling.
+                // This avoids the "teleport to bottom" effect from setting `.idle` at y<0.
+                if blobs[i].position.y < -Constants.topExitPadding {
+                    if blobs[i].isDummy {
+                        // True dummies just disappear.
+                        blobs[i].status = .idle
+                    } else {
+                        // Menu/keyword blobs become a cooled blob and sink back down offscreen.
+                        blobs[i].status = .sinking
+                        blobs[i].temperature = 0
+                        blobs[i].simVelocity = .zero
+                        blobs[i].position.y = -Constants.topExitPadding
+                    }
+                }
             case .fleeing:
                 // Move horizontally off-screen with acceleration
                 blobs[i].position.x += blobs[i].fleeDirection * blobs[i].currentSpeed
@@ -466,15 +615,27 @@ struct LavaMenuContainer: View {
             case .waiting:
                 if now.timeIntervalSince(blobs[i].waitStart) > blobs[i].waitTime { blobs[i].status = .sinking }
             case .sinking:
-                blobs[i].position.y += (blobs[i].baseSpeed * 0.7)
-                if blobs[i].position.y > size.height + 100 { blobs[i].status = .idle }
+                // Cooled wax is denser -> sinks with resistance.
+                let targetVy = CGFloat(90)
+                let currentVx = CGFloat(sin(Double(wobbleTime * 0.25 + blobs[i].wobbleSeed))) * (Constants.lateralCurrentPxPerSec * 0.6)
+                let follow = Constants.fluidFollow
+                blobs[i].simVelocity.dx += (currentVx - blobs[i].simVelocity.dx) * follow
+                blobs[i].simVelocity.dy += (targetVy - blobs[i].simVelocity.dy) * (follow * 0.8)
+                blobs[i].simVelocity.dx *= Constants.fluidDrag
+                blobs[i].simVelocity.dy *= Constants.fluidDrag
+                blobs[i].position.x += blobs[i].simVelocity.dx * CGFloat(dt)
+                blobs[i].position.y += blobs[i].simVelocity.dy * CGFloat(dt)
+
+                if blobs[i].position.y > size.height + Constants.bottomRecyclePadding {
+                    blobs[i].status = .idle
+                }
             default: break
             }
         }
 
         // Derive per-blob velocity (points/second) for rendering deformation.
-        let dt = max(Constants.timerHz, 1.0 / 120.0)
-        let invDt = CGFloat(1.0 / dt)
+        let dtV = max(Constants.timerHz, 1.0 / 120.0)
+        let invDt = CGFloat(1.0 / dtV)
         for i in blobs.indices {
             if blobs[i].status == .chatBubble && blobs[i].isAnchored {
                 blobs[i].velocity = .zero
@@ -485,13 +646,38 @@ struct LavaMenuContainer: View {
             let dy = blobs[i].position.y - blobs[i].previousPosition.y
             blobs[i].velocity = CGVector(dx: dx * invDt, dy: dy * invDt)
         }
+
+        // Signal whether any debris blobs are still visible within (or near) the viewport.
+        // Update only when it changes to avoid extra view invalidations.
+        let padding: CGFloat = 80
+        let anyDebris = blobs.contains(where: { b in
+            guard b.status == .debris else { return false }
+            return b.position.y > -padding && b.position.y < size.height + padding
+        })
+        if anyDebris != debrisInView {
+            debrisInView = anyDebris
+        }
     }
 }
 
 struct LavaMenuContainer_Previews: PreviewProvider {
     static var previews: some View {
-        LavaMenuContainer(menuItems: [], chatService: ChatService())
-            .previewLayout(.sizeThatFits)
-            .padding()
+        PreviewHost()
+    }
+
+    private struct PreviewHost: View {
+        @State private var debrisInView: Bool = false
+        @State private var typingOutInView: Bool = false
+
+        var body: some View {
+            LavaMenuContainer(
+                menuItems: [],
+                debrisInView: $debrisInView,
+                typingOutInView: $typingOutInView,
+                chatService: ChatService()
+            )
+                .previewLayout(.sizeThatFits)
+                .padding()
+        }
     }
 }

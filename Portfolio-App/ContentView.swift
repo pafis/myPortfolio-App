@@ -10,12 +10,12 @@ import SwiftUI
 /// This is the main "Content" View
 struct ContentView: View {
     let menuItems: [PortfolioMenuItem] = [
-        PortfolioMenuItem(level: 1, name: "Info", view: AnyView(Info()), image: UIImage(), textSize: 12),
-        PortfolioMenuItem(level: 1, name: "Services", view: AnyView(ServicesView()), image: UIImage(), textSize: 12),
-        PortfolioMenuItem(level: 2, name: "Skills & Languages", view: AnyView(SkillsAndLanguagesView()), image: UIImage(), textSize: 14),
-        PortfolioMenuItem(level: 2, name: "Professional Experience", view: AnyView(ExperienceView()), image: UIImage(), textSize: 12),
-        PortfolioMenuItem(level: 2, name: "Education", view: AnyView(Education()), image: UIImage(), textSize: 15),
-        PortfolioMenuItem(level: 3, name: "About me", view: AnyView(AboutMeView()), image: UIImage(resource: .meImage1X1), textSize: 25),
+        PortfolioMenuItem(name: "Info", view: AnyView(Info())),
+        PortfolioMenuItem(name: "Services", view: AnyView(ServicesView())),
+        PortfolioMenuItem(name: "Skills & Languages", view: AnyView(SkillsAndLanguagesView())),
+        PortfolioMenuItem(name: "Professional Experience", view: AnyView(ExperienceView())),
+        PortfolioMenuItem(name: "Education", view: AnyView(Education())),
+        PortfolioMenuItem(name: "About me", view: AnyView(AboutMeView())),
     ]
 
     @State private var showChat: Bool = false
@@ -26,8 +26,13 @@ struct ContentView: View {
     @FocusState private var isChatFieldFocused: Bool
 
     @State private var chatDismissToken = UUID()
+    @State private var pendingLLMSendToken = UUID()
+    @State private var debrisInView: Bool = false
+    @State private var isLLMQueued: Bool = false
+    @State private var typingOutInView: Bool = false
+    @State private var pendingAssistantCommitToken = UUID()
 
-    @State private var keywordTopics: [String] = []
+    @State private var keywordTopics: [ChatService.MenuKeyword] = []
     @State private var isLoadingKeywordTopics: Bool = false
     @State private var selectedMenuItem: PortfolioMenuItem? = nil
     @State private var keywordRefreshTask: Task<Void, Never>? = nil
@@ -44,11 +49,14 @@ struct ContentView: View {
                     selectedMenuItem = item
                 },
                 onSelectKeyword: { keyword in
-                    openChatAndAsk(keyword: keyword)
+                    openChatAndAsk(topic: keyword)
                 },
                 isChatFocused: showChat || isChatFieldFocused,
+                debrisInView: $debrisInView,
+                typingOutInView: $typingOutInView,
                 chatService: chatService,
-                showChatOverlay: showChatOverlay
+                showChatOverlay: showChatOverlay,
+                showTypingIndicator: (chatService.isTyping || isLLMQueued)
             )
                 .ignoresSafeArea()
 
@@ -67,11 +75,15 @@ struct ContentView: View {
                                 namespace: animationNamespace,
                                 isFocused: $isChatFieldFocused,
                                 onSend: {
-                                    chatService.sendMessage(chatText)
+                                    let text = chatText
                                     chatText = ""
+                                    enqueueLLMSend(text)
                                 },
                                 closeAction: {
                                     isChatFieldFocused = false
+                                    // Cancel any pending LLM send triggered by taps.
+                                    pendingLLMSendToken = UUID()
+                                    isLLMQueued = false
                                     withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
                                         showChat = false
                                     }
@@ -94,6 +106,8 @@ struct ContentView: View {
                             ChatButton(namespace: animationNamespace) {
                                 // Cancel any pending dismissal.
                                 chatDismissToken = UUID()
+                                // Cancel any pending LLM send triggered by taps.
+                                pendingLLMSendToken = UUID()
 
                                 withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
                                     showChat = true
@@ -101,9 +115,14 @@ struct ContentView: View {
                                 showChatOverlay = true
                                 isChatFieldFocused = true
 
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                // Wait for the open animation to settle before kicking off LLM work.
+                                let token = UUID()
+                                pendingLLMSendToken = token
+                                Task { @MainActor in
+                                    try? await Task.sleep(nanoseconds: 600_000_000)
+                                    guard pendingLLMSendToken == token else { return }
                                     guard showChat else { return }
-                                    chatService.sendIntroductionIfNeeded()
+                                    enqueueLLMSend(introductionIfNeeded: true)
                                 }
                             }
                         }
@@ -119,18 +138,40 @@ struct ContentView: View {
         .onAppear {
             startKeywordRefreshLoopIfNeeded()
         }
+        .onChange(of: chatService.pendingAssistantReply) { newValue in
+            guard newValue != nil else { return }
+
+            // Cancel any pending commit and schedule a new one.
+            let token = UUID()
+            pendingAssistantCommitToken = token
+
+            Task { @MainActor in
+                // Wait until the typing blob has fully floated out.
+                while typingOutInView {
+                    guard pendingAssistantCommitToken == token else { return }
+                    try? await Task.sleep(nanoseconds: 50_000_000)
+                }
+                guard pendingAssistantCommitToken == token else { return }
+                chatService.commitPendingAssistantReplyIfAny()
+            }
+        }
         .onDisappear {
             keywordRefreshTask?.cancel()
             keywordRefreshTask = nil
         }
     }
 
-    private func openChatAndAsk(keyword: String) {
-        let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+    private func openChatAndAsk(topic: ChatService.MenuKeyword) {
+        let trimmed = topic.keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
         // Cancel any pending dismissal.
         chatDismissToken = UUID()
+
+        // Cancel any pending LLM send triggered by previous taps.
+        pendingLLMSendToken = UUID()
+
+        let willAnimateOpen = !showChat
 
         if !showChat {
             withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
@@ -141,8 +182,54 @@ struct ContentView: View {
         }
 
         chatText = ""
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            chatService.sendMessage("Tell me about \(trimmed) in Pascal Fischer's portfolio.")
+
+        // Wait until the open animation has rendered before starting generation.
+        let token = UUID()
+        pendingLLMSendToken = token
+        Task { @MainActor in
+            if willAnimateOpen {
+                try? await Task.sleep(nanoseconds: 600_000_000)
+            } else {
+                // Chat already open: just yield a frame.
+                await Task.yield()
+            }
+            guard pendingLLMSendToken == token else { return }
+            enqueueLLMSend(topic.question, token: token)
+        }
+    }
+
+    @MainActor
+    private func enqueueLLMSend(_ text: String, token: UUID? = nil) {
+        let current = token ?? pendingLLMSendToken
+        // Append the user message immediately so it can render while we delay LLM compute.
+        guard chatService.appendUserMessage(text) != nil else { return }
+        isLLMQueued = true
+
+        Task { @MainActor in
+            // Wait until debris has fully left the viewport.
+            // This prevents LLM compute contention during the heavy "move out of the way" animation.
+            while debrisInView {
+                guard pendingLLMSendToken == current else { isLLMQueued = false; return }
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+            guard pendingLLMSendToken == current else { isLLMQueued = false; return }
+            isLLMQueued = false
+            chatService.startAssistantReply(for: text)
+        }
+    }
+
+    @MainActor
+    private func enqueueLLMSend(introductionIfNeeded: Bool) {
+        let token = pendingLLMSendToken
+        isLLMQueued = true
+        Task { @MainActor in
+            while debrisInView {
+                guard pendingLLMSendToken == token else { isLLMQueued = false; return }
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+            guard pendingLLMSendToken == token else { isLLMQueued = false; return }
+            isLLMQueued = false
+            chatService.sendIntroductionIfNeeded()
         }
     }
 
@@ -179,7 +266,7 @@ struct ContentView: View {
             if nsError.domain == "ChatService", [-10, -11, -20, -21].contains(nsError.code) {
                 await MainActor.run {
                     if keywordTopics.isEmpty {
-                        keywordTopics = ["Skills", "Experience", "Projects", "Leadership", "Relocation", "Education"]
+                        keywordTopics = defaultKeywordTopics()
                     }
                     keywordRefreshTask?.cancel()
                     keywordRefreshTask = nil
@@ -187,6 +274,20 @@ struct ContentView: View {
             }
             // -3 (busy) / -12 (not ready) and other transient errors: just keep current topics.
             print("Keyword generation error: \(error)")
+        }
+    }
+
+    private func defaultKeywordTopics() -> [ChatService.MenuKeyword] {
+        let topics = [
+            "Tech Stack",
+            "Work Experience",
+            "Featured Projects",
+            "Key Skills",
+            "Leadership Style",
+            "Education Background",
+        ]
+        return topics.map { t in
+            ChatService.MenuKeyword(keyword: t, question: "What can you tell me about \(t) in Pascal Fischer's portfolio?")
         }
     }
 }

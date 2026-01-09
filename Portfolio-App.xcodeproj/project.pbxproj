@@ -27,6 +27,7 @@
 		0C727EB72A577B5200C0CABC /* ServiceItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C727EB62A577B5200C0CABC /* ServiceItem.swift */; };
 		0C727EB92A577BA900C0CABC /* Ball.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C727EB82A577BA900C0CABC /* Ball.swift */; };
 		0C7820B12A413F7D003DE643 /* AboutMeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C7820B02A413F7D003DE643 /* AboutMeView.swift */; };
+		0CA1892B2F113107007D62B3 /* KeywordValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA1892A2F113107007D62B3 /* KeywordValidation.swift */; };
 		0CABFC9C2F08872B007D30C1 /* LavaRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFC9A2F08872B007D30C1 /* LavaRenderer.swift */; };
 		0CABFC9D2F08872B007D30C1 /* LavaMenuContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFC992F08872B007D30C1 /* LavaMenuContainer.swift */; };
 		0CABFC9E2F08872B007D30C1 /* MenuBlobState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFC9B2F08872B007D30C1 /* MenuBlobState.swift */; };
@@ -66,6 +67,7 @@
 		0C727EB62A577B5200C0CABC /* ServiceItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceItem.swift; sourceTree = "<group>"; };
 		0C727EB82A577BA900C0CABC /* Ball.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ball.swift; sourceTree = "<group>"; };
 		0C7820B02A413F7D003DE643 /* AboutMeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutMeView.swift; sourceTree = "<group>"; };
+		0CA1892A2F113107007D62B3 /* KeywordValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeywordValidation.swift; sourceTree = "<group>"; };
 		0CABFC992F08872B007D30C1 /* LavaMenuContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LavaMenuContainer.swift; sourceTree = "<group>"; };
 		0CABFC9A2F08872B007D30C1 /* LavaRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LavaRenderer.swift; sourceTree = "<group>"; };
 		0CABFC9B2F08872B007D30C1 /* MenuBlobState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBlobState.swift; sourceTree = "<group>"; };
@@ -122,6 +124,7 @@
 			children = (
 				0CABFCC52F0D1D6E007D30C1 /* ChatSystemPrompt.swift */,
 				0CABFCB72F0C031C007D30C1 /* ChatService.swift */,
+				0CA1892A2F113107007D62B3 /* KeywordValidation.swift */,
 				0CABFCAF2F0A9231007D30C1 /* ChatScrollOverlay.swift */,
 				0CABFCA12F088A62007D30C1 /* Shaders */,
 				0CABFC992F08872B007D30C1 /* LavaMenuContainer.swift */,
@@ -261,6 +264,7 @@
 				0CC4E5B82A4A248E00F1D7A7 /* Education.swift in Sources */,
 				0CCBF74A2A3C645B00CCD315 /* ContentView.swift in Sources */,
 				0C571DEB2A4D179B00FD082E /* BackgroundView.swift in Sources */,
+				0CA1892B2F113107007D62B3 /* KeywordValidation.swift in Sources */,
 				0C727EA72A57784E00C0CABC /* TileDetailsView.swift in Sources */,
 				0C727EB92A577BA900C0CABC /* Ball.swift in Sources */,
 				0CE4FE142A4A8C1500380548 /* ServicesView.swift in Sources */,

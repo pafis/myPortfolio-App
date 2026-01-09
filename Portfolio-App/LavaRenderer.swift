@@ -38,6 +38,11 @@ final public class LavaRenderer: NSObject, MTKViewDelegate {
     private var emptyBlobBuffer: MTLBuffer?
     let startTime = Date()
 
+    private static let fullScreenQuad: [SIMD2<Float>] = [
+        [-1, -1], [1, -1], [-1, 1],
+        [1, -1], [1, 1], [-1, 1]
+    ]
+
     public func updateBlobs(_ newBlobs: [BlobData]) {
         blobsLock.lock()
         blobs = newBlobs
@@ -103,7 +108,7 @@ final public class LavaRenderer: NSObject, MTKViewDelegate {
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else { return }
         encoder.setRenderPipelineState(pipelineState)
         
-        let vertices: [SIMD2<Float>] = [[-1, -1], [1, -1], [-1, 1], [1, -1], [1, 1], [-1, 1]]
+        let vertices = Self.fullScreenQuad
         encoder.setVertexBytes(vertices, length: vertices.count * MemoryLayout<SIMD2<Float>>.stride, index: 0)
         
         let time = Float(Date().timeIntervalSince(startTime))
@@ -162,6 +167,7 @@ final public class LavaRenderer: NSObject, MTKViewDelegate {
 public struct MetalLavaView: UIViewRepresentable {
     var blobs: [MenuBlobState]
     var containerSize: CGSize
+    var time: Float
 
     public func makeCoordinator() -> Coordinator { Coordinator() }
     
@@ -196,10 +202,38 @@ public struct MetalLavaView: UIViewRepresentable {
             return
         }
 
-        var data: [BlobData] = blobs.compactMap { blob in
-            guard blob.status != .idle else { return nil }
-            let px = Float(blob.position.x)
-            let py = Float(blob.position.y)
+        context.coordinator.scratch.removeAll(keepingCapacity: true)
+        context.coordinator.scratch.reserveCapacity(blobs.count * 2)
+
+        // Culling keeps the fragment shader loop cost stable even with long chat histories.
+        let cullPaddingPx: Float = 320
+
+        // Reservoir definition
+        let reservoirY: Float = 1.16
+        let reservoirRadius: Float = 0.18
+        let reservoirXs: [Float] = [-0.15, 0.15, 0.50, 0.85, 1.15]
+
+        func wobbleOffsetPx(seed: Float) -> SIMD2<Float> {
+            // Keep wobble in pixel space so it matches label wobble exactly.
+            // Amplitude is relative to height so it feels consistent across devices.
+            let ampPx = height * 0.008
+            let dx = sin(time * 1.2 + seed) * ampPx
+            let dy = cos(time * 0.9 + seed) * ampPx
+            return SIMD2(dx, dy)
+        }
+
+        for blob in blobs {
+            guard blob.status != .idle else { continue }
+            var px = Float(blob.position.x)
+            var py = Float(blob.position.y)
+
+            // Apply wobble only to circle blobs (menu/keyword/dummy blobs).
+            if blob.status != .chatBubble && blob.status != .spawningToChat && blob.status != .dismissing {
+                let w = wobbleOffsetPx(seed: blob.wobbleSeed)
+                px += w.x
+                py += w.y
+            }
+
             let pos = SIMD2(px / width, py / height)
 
             // Upward speed in normalized-units per second (0 when not rising).
@@ -216,34 +250,57 @@ public struct MetalLavaView: UIViewRepresentable {
             let upwardSpeedN = (height > 0) ? (upwardSpeedPointsPerSec / height) : 0.0
 
             if blob.status == .chatBubble || blob.status == .spawningToChat || blob.status == .dismissing {
-                
-                let shrinkPx: CGFloat = -10
+                // Chat Bubble Logic
+                // No helper circles here. The shader handles merging via a soft aura + bridge boost.
+                let shrinkPx: CGFloat = 0
                 let wPx = max(blob.bubbleWidth - shrinkPx, 40)
                 let hPx = max(blob.bubbleHeight - shrinkPx, 24)
+
+                // Cull by bounds so large chat bubbles don't vanish when their center is offscreen.
+                let halfH = Float(hPx) * 0.5
+                if (py + halfH) < -cullPaddingPx || (py - halfH) > height + cullPaddingPx {
+                    continue
+                }
+
                 let w = Float(wPx) / width
                 let h = Float(hPx) / height
                 let role: Float = (blob.chatRole == .user) ? 1.0 : 0.0
-                return BlobData(
-                    position: pos,
-                    size: SIMD2(w, h),
-                    params: SIMD4(1.0, role, blob.wobbleSeed, upwardSpeedN) // type=1 chat rect
+
+                context.coordinator.scratch.append(
+                    BlobData(
+                        position: pos,
+                        size: SIMD2(w, h),
+                        params: SIMD4(1.0, role, blob.wobbleSeed, upwardSpeedN) // type=1 chat rect
+                    )
                 )
+                continue
             }
 
-            return BlobData(
-                position: pos,
-                size: SIMD2((Float(blob.baseRadius) / height) * (blob.isDummy ? 1.25 : 1.0), 0.0),
-                params: SIMD4(0.0, 0.0, blob.wobbleSeed, upwardSpeedN) // type=0 circle
+            // Skip circle blobs far outside the viewport.
+            if py < -cullPaddingPx || py > height + cullPaddingPx {
+                continue
+            }
+
+            // Thermal expansion: hotter blobs appear slightly larger.
+            let tempN = Float(max(0, min(1, blob.temperature)))
+            // Tag debris as "bubble fragments" so the shader can make them harder to merge.
+            let tempParam: Float = (blob.status == .debris) ? -0.2 : tempN
+            let expansion = 1.0 + (0.18 * tempN)
+            let radiusPx = Float(blob.baseRadius) * expansion
+
+            context.coordinator.scratch.append(
+                BlobData(
+                    position: pos,
+                    size: SIMD2((radiusPx / height) * (blob.isDummy ? 1.0 : 1.0), 0.0),
+                    params: SIMD4(0.0, tempParam, blob.wobbleSeed, upwardSpeedN) // type=0 circle, y=temp (negative => debris)
+                )
             )
         }
 
         // Reservoir: a bottom pool made from multiple large circle blobs.
         // This spans left→right and keeps an organic (non-rect) silhouette.
-        let reservoirY: Float = 1.3 
-        let reservoirRadius: Float = 0.18 
-        let reservoirXs: [Float] = [-0.15, 0.15, 0.50, 0.85, 1.15]
         for x in reservoirXs {
-            data.append(
+            context.coordinator.scratch.append(
                 BlobData(
                     position: SIMD2(x, reservoirY),
                     size: SIMD2(reservoirRadius, 0.0),
@@ -252,10 +309,13 @@ public struct MetalLavaView: UIViewRepresentable {
             )
         }
 
-        context.coordinator.renderer?.updateBlobs(data)
+        context.coordinator.renderer?.updateBlobs(context.coordinator.scratch)
     }
     
-    public class Coordinator { public var renderer: LavaRenderer? }
+    public class Coordinator {
+        public var renderer: LavaRenderer?
+        public var scratch: [BlobData] = []
+    }
 }
 
 
