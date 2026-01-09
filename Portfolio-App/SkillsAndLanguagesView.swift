@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-/// A view that displays a list of progress skill categories.
 struct SkillsAndLanguagesView: View {
     @Environment(\.sizeCategory) private var sizeCategory
     @Environment(\.verticalSizeClass) private var verticalSizeClass
@@ -19,86 +18,69 @@ struct SkillsAndLanguagesView: View {
 
     var body: some View {
         ScrollView {
-            StickyHeader {
-                ZStack {
-                    Image(.professionalExperienceHeader)
-                        .renderingMode(.original)
-                        .resizable(resizingMode: .stretch)
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 350)
-                    VStack {
-                        Text("Skills & Languages")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundColor(Color.white)
-                    }.padding(.top, 75)
+            VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Skills & Languages")
+                        .font(.system(.largeTitle, design: .rounded).bold())
+                    Text("A quick snapshot of what I use daily")
+                        .font(.system(.callout, design: .rounded))
+                        .foregroundStyle(.secondary)
                 }
-            }
-            ZStack {
-                BackgroundView().blur(radius: 40).padding(.top, -10)
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.primaryTile.opacity(0.9), Color.clear]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                ).padding(.top, -10)
-                Grid(alignment: .center) {
-                    ForEach(data, id: \.id) { tile in
+                .glassyCard(cornerRadius: 32, padding: 20)
+                .padding(.top, 24)
 
-                        HStack {
-                            GridTileDetailsView(title: tile.name, icon: tile.icon, font: tile.font) {
-                                ZStack {
-                                    VStack(alignment: .center) {
-                                        TabView {
-                                            ForEach(tile.skills, id: \.id) { skill in
-                                                GeometryReader { geometry in
+                ForEach(data, id: \.id) { category in
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack(spacing: 12) {
+                            Image(systemName: category.icon)
+                                .font(.headline)
+                                .foregroundStyle(.white)
+                                .frame(width: 40, height: 40)
+                                .background(
+                                    LinearGradient(colors: [.purple, .purple.opacity(0.7)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
-                                                    CircularProgressView(progress: skill.progress, text: skill.name, strokeLineWidth: 10).frame(width: 150, height: 150)
-                                                        .background {
-                                                            Color.secondary.opacity(skill.progress)
-                                                        }.clipShape(RoundedRectangle(cornerRadius: 30))
-                                                        .padding(.leading, 80)
+                            Text(category.name.replacingOccurrences(of: "\n", with: " "))
+                                .font(.system(.headline, design: .rounded).bold())
 
-                                                        .animation(.bouncy)
-                                                        .rotation3DEffect(Angle(degrees: (Double(geometry.frame(in: .global).minX) - 50) / -8), axis: (x: 0, y: 1.0, z: 0))
-                                                }
-                                            }
-                                        }.tabViewStyle(PageTabViewStyle())
-                                            .frame(height: 210)
-                                            .padding(.top, 150)
+                            Spacer()
+                        }
+
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 14) {
+                                ForEach(category.skills, id: \.id) { skill in
+                                    VStack(spacing: 12) {
+                                        CircularProgressView(progress: skill.progress, text: "", strokeLineWidth: 7)
+                                            .frame(width: 76, height: 76)
+
+                                        Text(skill.name)
+                                            .font(.system(.caption, design: .rounded).weight(.medium))
+                                            .multilineTextAlignment(.center)
+                                            .lineLimit(2)
+                                            .foregroundStyle(.secondary)
                                     }
-                                    .padding(.horizontal, 20)
-                                    .padding(.top, -150)
+                                    .frame(width: 110, height: 140)
+                                    .background(.ultraThinMaterial.opacity(0.5))
+                                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                            .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                                    )
                                 }
                             }
-                        }.padding(.horizontal, 10)
-                        Spacer()
+                            .padding(.horizontal, 2)
+                        }
                     }
-                }.padding(.top, 50)
-                    .padding(.bottom, 30)
-
-            }.clipShape(UnevenRoundedRectangle(cornerRadii: RectangleCornerRadii(topLeading: 35.0, topTrailing: 35.0)))
-                .padding(.bottom, -40)
-
-        }.scrollIndicators(.hidden)
+                    .glassyCard(cornerRadius: 32, padding: 20)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 24)
+        }
+        .scrollIndicators(.hidden)
+        .background(Color.clear)
     }
-
-/// Creates an array of grid items based on the current size class.
-///
-/// - Returns: An array of grid items.
-private func createGridItems() -> [GridItem] {
-    let columns: [GridItem]
-
-    if verticalSizeClass == .regular {
-        columns = [GridItem(.flexible(minimum: 300))]
-    } else {
-        columns = [
-            GridItem(.flexible(minimum: 120)),
-            GridItem(.flexible(minimum: 120)),
-            GridItem(.flexible(minimum: 120)),
-        ]
-    }
-    return columns
-}
 }
 
 #Preview {

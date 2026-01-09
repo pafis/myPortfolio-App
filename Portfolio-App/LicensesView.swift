@@ -15,29 +15,35 @@ struct LicensesView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Button(action: {
-                    withAnimation {
-                        currentView = .main
-                    }
-                }) {
-                    Image(systemName: "chevron.left").padding(.trailing, 2)
-                    Text("Back")
+                Button {
+                    withAnimation { currentView = .main }
+                } label: {
+                    Label("Back", systemImage: "chevron.left")
+                        .font(.headline)
                 }
-                .padding()
-                .foregroundColor(.primary)
+                .buttonStyle(.plain)
 
-            }.padding(.bottom, 5)
-            TileDetailsView(title: "Licenses") {
+                Spacer()
+            }
+
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Licenses")
+                    .font(.system(.title2, design: .rounded).bold())
+
                 if let licenseText {
                     Text(licenseText)
-                        .padding(10)
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .lineSpacing(4)
                 } else {
                     Text("License content not available.")
-                        .padding(10)
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
                 }
             }
+            .glassyCard(cornerRadius: 32, padding: 20)
         }
     }
 }

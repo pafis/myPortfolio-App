@@ -12,7 +12,6 @@
 		0C14DBAC2A5643F30077894E /* VersionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C14DBAB2A5643F30077894E /* VersionView.swift */; };
 		0C571DE72A4CEDFB00FD082E /* TypeWriterAnimationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C571DE62A4CEDFB00FD082E /* TypeWriterAnimationView.swift */; };
 		0C571DE92A4CF40700FD082E /* ProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C571DE82A4CF40700FD082E /* ProgressView.swift */; };
-		0C571DEB2A4D179B00FD082E /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C571DEA2A4D179B00FD082E /* BackgroundView.swift */; };
 		0C727E9F2A57499C00C0CABC /* Licenses.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 0C727E9E2A57499C00C0CABC /* Licenses.rtf */; };
 		0C727EA32A57720600C0CABC /* Imprint.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 0C727EA22A57720600C0CABC /* Imprint.rtf */; };
 		0C727EA52A57780A00C0CABC /* StickyHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C727EA42A57780A00C0CABC /* StickyHeader.swift */; };
@@ -31,6 +30,9 @@
 		0CA1892E2F1137EE007D62B3 /* PortfolioRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA1892D2F1137EE007D62B3 /* PortfolioRoute.swift */; };
 		0CA1892F2F1137EE007D62B3 /* ContentViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA1892C2F1137EE007D62B3 /* ContentViewModel.swift */; };
 		0CA189312F113821007D62B3 /* RTFResourceLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA189302F113821007D62B3 /* RTFResourceLoader.swift */; };
+		0CA189332F113DAB007D62B3 /* LiquidGlassStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA189322F113DAB007D62B3 /* LiquidGlassStyle.swift */; };
+		0CA189352F114AB8007D62B3 /* LiquidGlassStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA189342F114AB8007D62B3 /* LiquidGlassStyle.swift */; };
+		0CA189392F11591B007D62B3 /* BlobModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA189382F11591B007D62B3 /* BlobModalView.swift */; };
 		0CABFC9C2F08872B007D30C1 /* LavaRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFC9A2F08872B007D30C1 /* LavaRenderer.swift */; };
 		0CABFC9D2F08872B007D30C1 /* LavaMenuContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFC992F08872B007D30C1 /* LavaMenuContainer.swift */; };
 		0CABFC9E2F08872B007D30C1 /* MenuBlobState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CABFC9B2F08872B007D30C1 /* MenuBlobState.swift */; };
@@ -55,7 +57,6 @@
 		0C14DBAB2A5643F30077894E /* VersionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersionView.swift; sourceTree = "<group>"; };
 		0C571DE62A4CEDFB00FD082E /* TypeWriterAnimationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypeWriterAnimationView.swift; sourceTree = "<group>"; };
 		0C571DE82A4CF40700FD082E /* ProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressView.swift; sourceTree = "<group>"; };
-		0C571DEA2A4D179B00FD082E /* BackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView.swift; sourceTree = "<group>"; };
 		0C727E9E2A57499C00C0CABC /* Licenses.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Licenses.rtf; sourceTree = "<group>"; };
 		0C727EA22A57720600C0CABC /* Imprint.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Imprint.rtf; sourceTree = "<group>"; };
 		0C727EA42A57780A00C0CABC /* StickyHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickyHeader.swift; sourceTree = "<group>"; };
@@ -74,6 +75,9 @@
 		0CA1892C2F1137EE007D62B3 /* ContentViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewModel.swift; sourceTree = "<group>"; };
 		0CA1892D2F1137EE007D62B3 /* PortfolioRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortfolioRoute.swift; sourceTree = "<group>"; };
 		0CA189302F113821007D62B3 /* RTFResourceLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RTFResourceLoader.swift; path = Utilities/RTFResourceLoader.swift; sourceTree = "<group>"; };
+		0CA189322F113DAB007D62B3 /* LiquidGlassStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlassStyle.swift; sourceTree = "<group>"; };
+		0CA189342F114AB8007D62B3 /* LiquidGlassStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlassStyle.swift; sourceTree = "<group>"; };
+		0CA189382F11591B007D62B3 /* BlobModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobModalView.swift; sourceTree = "<group>"; };
 		0CABFC992F08872B007D30C1 /* LavaMenuContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LavaMenuContainer.swift; sourceTree = "<group>"; };
 		0CABFC9A2F08872B007D30C1 /* LavaRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LavaRenderer.swift; sourceTree = "<group>"; };
 		0CABFC9B2F08872B007D30C1 /* MenuBlobState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBlobState.swift; sourceTree = "<group>"; };
@@ -128,6 +132,8 @@
 		0CCBF7462A3C645B00CCD315 /* Portfolio-App */ = {
 			isa = PBXGroup;
 			children = (
+				0CA189382F11591B007D62B3 /* BlobModalView.swift */,
+				0CA189322F113DAB007D62B3 /* LiquidGlassStyle.swift */,
 				0CA189302F113821007D62B3 /* RTFResourceLoader.swift */,
 				0CA1892C2F1137EE007D62B3 /* ContentViewModel.swift */,
 				0CA1892D2F1137EE007D62B3 /* PortfolioRoute.swift */,
@@ -154,8 +160,8 @@
 				0CC4E5B72A4A248E00F1D7A7 /* Education.swift */,
 				0CE4FE0F2A4A6D9A00380548 /* ExperienceView.swift */,
 				0CE4FE132A4A8C1500380548 /* ServicesView.swift */,
+				0CA189342F114AB8007D62B3 /* LiquidGlassStyle.swift */,
 				0C571DE62A4CEDFB00FD082E /* TypeWriterAnimationView.swift */,
-				0C571DEA2A4D179B00FD082E /* BackgroundView.swift */,
 				0C727EB22A577AC500C0CABC /* CircleData.swift */,
 				0C14DBA72A5643BC0077894E /* LicensesView.swift */,
 				0C14DBAB2A5643F30077894E /* VersionView.swift */,
@@ -267,13 +273,13 @@
 				0C727EB52A577AF200C0CABC /* MotionManager.swift in Sources */,
 				0C7820B12A413F7D003DE643 /* AboutMeView.swift in Sources */,
 				0C571DE72A4CEDFB00FD082E /* TypeWriterAnimationView.swift in Sources */,
+				0CA189392F11591B007D62B3 /* BlobModalView.swift in Sources */,
 				0C727EAB2A5778E600C0CABC /* CVEvent.swift in Sources */,
 				0CC4E5B42A49FE6A00F1D7A7 /* ComposeEmailView.swift in Sources */,
 				0CABFCB82F0C0322007D30C1 /* ChatService.swift in Sources */,
 				0CA189312F113821007D62B3 /* RTFResourceLoader.swift in Sources */,
 				0CC4E5B82A4A248E00F1D7A7 /* Education.swift in Sources */,
 				0CCBF74A2A3C645B00CCD315 /* ContentView.swift in Sources */,
-				0C571DEB2A4D179B00FD082E /* BackgroundView.swift in Sources */,
 				0CA1892B2F113107007D62B3 /* KeywordValidation.swift in Sources */,
 				0C727EA72A57784E00C0CABC /* TileDetailsView.swift in Sources */,
 				0C727EB92A577BA900C0CABC /* Ball.swift in Sources */,
@@ -292,6 +298,8 @@
 				0C14DBAC2A5643F30077894E /* VersionView.swift in Sources */,
 				0C571DE92A4CF40700FD082E /* ProgressView.swift in Sources */,
 				0CABFC9C2F08872B007D30C1 /* LavaRenderer.swift in Sources */,
+				0CA189332F113DAB007D62B3 /* LiquidGlassStyle.swift in Sources */,
+				0CA189352F114AB8007D62B3 /* LiquidGlassStyle.swift in Sources */,
 				0CABFC9D2F08872B007D30C1 /* LavaMenuContainer.swift in Sources */,
 				0CA1892E2F1137EE007D62B3 /* PortfolioRoute.swift in Sources */,
 				0CA1892F2F1137EE007D62B3 /* ContentViewModel.swift in Sources */,

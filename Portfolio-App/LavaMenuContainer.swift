@@ -15,6 +15,8 @@ struct LavaMenuContainer: View {
     var isChatFocused: Bool = false
     @Binding var debrisInView: Bool
     @Binding var typingOutInView: Bool
+    var isDetailOpen: Bool = false
+    var detailDragOffsetY: CGFloat = 0
     
     // Chat integration
     @ObservedObject var chatService: ChatService
@@ -107,7 +109,29 @@ struct LavaMenuContainer: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                MetalLavaView(blobs: blobs, containerSize: geo.size, time: wobbleTime)
+                // Drive a rectangular "detail blob" in the Metal background that matches the modal.
+                // Keep the reservoir visible even while detail is open.
+                let modalWidth = max(0, geo.size.width - 20)
+                let modalHeight = max(0, geo.size.height * 0.92)
+                let modalDownShift = geo.size.height * 0.10
+                let modalCenter = CGPoint(
+                    x: geo.size.width * 0.5,
+                    y: (geo.size.height * 0.5) + modalDownShift + detailDragOffsetY
+                )
+                let detailRect = CGRect(
+                    x: modalCenter.x - (modalWidth * 0.5),
+                    y: modalCenter.y - (modalHeight * 0.5),
+                    width: modalWidth,
+                    height: modalHeight
+                )
+
+                MetalLavaView(
+                    blobs: blobs,
+                    containerSize: geo.size,
+                    time: wobbleTime,
+                    showReservoir: true,
+                    detailRect: isDetailOpen ? detailRect : nil
+                )
                     .ignoresSafeArea(.all)
               
                 ForEach(blobs.indices, id: \.self) { i in
@@ -407,8 +431,9 @@ struct LavaMenuContainer: View {
             typingOutInView = typingOut
         }
         
-        // If focus just started, tell all active blobs to flee sideways
-        if isChatFocused {
+        // If focus just started or detail view opened, tell all active blobs to flee sideways
+        let shouldFlee = isChatFocused || isDetailOpen
+        if shouldFlee {
             if !wasFocused {
                 wasFocused = true
                 for idx in blobs.indices {

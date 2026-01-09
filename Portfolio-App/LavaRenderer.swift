@@ -168,6 +168,8 @@ public struct MetalLavaView: UIViewRepresentable {
     var blobs: [MenuBlobState]
     var containerSize: CGSize
     var time: Float
+    var showReservoir: Bool = true
+    var detailRect: CGRect? = nil
 
     public func makeCoordinator() -> Coordinator { Coordinator() }
     
@@ -297,16 +299,34 @@ public struct MetalLavaView: UIViewRepresentable {
             )
         }
 
-        // Reservoir: a bottom pool made from multiple large circle blobs.
-        // This spans left→right and keeps an organic (non-rect) silhouette.
-        for x in reservoirXs {
+        // Detail modal blob: a single large rect blob (chat-rect style).
+        // This is used to get a clean rectangular "blob" behind detail content.
+        if let rect = detailRect {
+            let cx = Float(rect.midX) / width
+            let cy = Float(rect.midY) / height
+            let w = Float(rect.width) / width
+            let h = Float(rect.height) / height
             context.coordinator.scratch.append(
                 BlobData(
-                    position: SIMD2(x, reservoirY),
-                    size: SIMD2(reservoirRadius, 0.0),
-                    params: SIMD4(0.0, 0.0, 0.0, 0.0) 
+                    position: SIMD2(cx, cy),
+                    size: SIMD2(w, h),
+                    params: SIMD4(1.0, 2.0, 0.0, 0.0) // role=2 => "detail" rect (bigger corner radius)
                 )
             )
+        }
+
+        // Reservoir: a bottom pool made from multiple large circle blobs.
+        // This spans left→right and keeps an organic (non-rect) silhouette.
+        if showReservoir {
+            for x in reservoirXs {
+                context.coordinator.scratch.append(
+                    BlobData(
+                        position: SIMD2(x, reservoirY),
+                        size: SIMD2(reservoirRadius, 0.0),
+                        params: SIMD4(0.0, 0.0, 0.0, 0.0)
+                    )
+                )
+            }
         }
 
         context.coordinator.renderer?.updateBlobs(context.coordinator.scratch)

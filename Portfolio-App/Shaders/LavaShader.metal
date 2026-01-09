@@ -60,7 +60,8 @@ static inline float radiusRipple(float2 q, float t, float seed) {
     float ang = atan2(q.y, q.x);
     float w1 = sin(ang * 3.0 + t * 0.55 + seed);
     float w2 = sin(ang * 5.0 - t * 0.35 + seed * 1.7);
-    return (w1 * 0.08 + w2 * 0.04);
+    // Increased amplitude to match the visible wobble of BlobModalView
+    return (w1 * 0.15 + w2 * 0.08);
 }
 
 static inline float sdBox(float2 p, float2 b, float r) {
@@ -109,7 +110,8 @@ static inline float getDistance(float2 p, float aspect, float time, constant Blo
 
             // Break perfect circles with a small angular ripple (stronger when hot).
             float ripple = radiusRipple(q, time, seed);
-            float rippleAmt = mix(0.10, 0.26, temp);
+            // Increased wobble amount mix for more organic feel
+            float rippleAmt = mix(0.15, 0.35, temp);
             float rWarp = r * (1.0 + ripple * rippleAmt);
 
             // Rayleigh–Taylor pinching: hot + rising blobs form necks and split into lobes.
@@ -132,7 +134,20 @@ static inline float getDistance(float2 p, float aspect, float time, constant Blo
             // Rect
             float2 size = max(blobs[i].size, float2(0.001));
             float2 b = float2(size.x * aspect, size.y) * 0.5;
-            float dist = sdBox(p - center, b, 0.02);
+            
+            float role = blobs[i].params.y;
+            float seed = blobs[i].params.z;
+
+            // Larger corner radius for the big detail/background rect.
+            float cornerR = (role > 1.5) ? 0.075 : 0.02;
+
+            // Keep the big detail/background rect stable (no wobble), but allow wobble for other rects.
+            float rectRippleAmt = (role > 1.5) ? 0.0 : 0.08;
+            float ripple = radiusRipple(p - center, time, seed);
+
+            float dist = sdBox(p - center, b, cornerR);
+            dist -= ripple * rectRippleAmt * min(size.x, size.y);
+            
             dRect = min(dRect, dist);
         }
     }

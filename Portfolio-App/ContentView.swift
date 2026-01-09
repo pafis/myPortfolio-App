@@ -33,6 +33,7 @@ struct ContentView: View {
 
     @State private var selectedMenuItem: PortfolioMenuItem? = nil
     @StateObject private var model = ContentViewModel()
+    @State private var detailDragOffsetY: CGFloat = 0
 
     var body: some View {
         ZStack {
@@ -41,7 +42,10 @@ struct ContentView: View {
                 menuItems: menuItems,
                 keywordItems: model.keywordTopics,
                 onSelectMenuItem: { item in
-                    selectedMenuItem = item
+                    guard selectedMenuItem == nil else { return }
+                    withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                        selectedMenuItem = item
+                    }
                 },
                 onSelectKeyword: { keyword in
                     openChatAndAsk(topic: keyword)
@@ -49,6 +53,8 @@ struct ContentView: View {
                 isChatFocused: showChat || isChatFieldFocused,
                 debrisInView: $debrisInView,
                 typingOutInView: $typingOutInView,
+                isDetailOpen: selectedMenuItem != nil,
+                detailDragOffsetY: detailDragOffsetY,
                 chatService: chatService,
                 showChatOverlay: showChatOverlay,
                 showTypingIndicator: (chatService.isTyping || isLLMQueued)
@@ -56,79 +62,98 @@ struct ContentView: View {
                 .ignoresSafeArea()
 
             // Foreground: Floating Chat Controls
-            VStack {
-                Spacer()
-                
-                HStack {
+            // Only show chat controls if no menu item is selected.
+            if selectedMenuItem == nil {
+                VStack {
                     Spacer()
                     
-                    // Alignment Container
-                    ZStack(alignment: .bottomTrailing) {
-                        if showChat {
-                            ChatBox(
-                                text: $chatText,
-                                namespace: animationNamespace,
-                                isFocused: $isChatFieldFocused,
-                                onSend: {
-                                    let text = chatText
-                                    chatText = ""
-                                    enqueueLLMSend(text)
-                                },
-                                closeAction: {
-                                    isChatFieldFocused = false
+                    HStack {
+                        Spacer()
+                        
+                        // Alignment Container
+                        ZStack(alignment: .bottomTrailing) {
+                            if showChat {
+                                ChatBox(
+                                    text: $chatText,
+                                    namespace: animationNamespace,
+                                    isFocused: $isChatFieldFocused,
+                                    onSend: {
+                                        let text = chatText
+                                        chatText = ""
+                                        enqueueLLMSend(text)
+                                    },
+                                    closeAction: {
+                                        isChatFieldFocused = false
+                                        // Cancel any pending LLM send triggered by taps.
+                                        pendingLLMSendToken = UUID()
+                                        isLLMQueued = false
+                                        withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
+                                            showChat = false
+                                        }
+
+                                        // Drop the overlay immediately so its blobs can be detached and start rising.
+                                        showChatOverlay = false
+
+                                        // Delay history clear until after the close animation.
+                                        let token = UUID()
+                                        chatDismissToken = token
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                            guard chatDismissToken == token else { return }
+                                            guard !showChat else { return }
+                                            chatText = ""
+                                            chatService.clear()
+                                        }
+                                    }
+                                )
+                            } else {
+                                ChatButton(namespace: animationNamespace) {
+                                    // Cancel any pending dismissal.
+                                    chatDismissToken = UUID()
                                     // Cancel any pending LLM send triggered by taps.
                                     pendingLLMSendToken = UUID()
-                                    isLLMQueued = false
+
                                     withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
-                                        showChat = false
+                                        showChat = true
                                     }
+                                    showChatOverlay = true
+                                    isChatFieldFocused = true
 
-                                    // Drop the overlay immediately so its blobs can be detached and start rising.
-                                    showChatOverlay = false
-
-                                    // Delay history clear until after the close animation.
+                                    // Wait for the open animation to settle before kicking off LLM work.
                                     let token = UUID()
-                                    chatDismissToken = token
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                        guard chatDismissToken == token else { return }
-                                        guard !showChat else { return }
-                                        chatText = ""
-                                        chatService.clear()
+                                    pendingLLMSendToken = token
+                                    Task { @MainActor in
+                                        try? await Task.sleep(nanoseconds: 600_000_000)
+                                        guard pendingLLMSendToken == token else { return }
+                                        guard showChat else { return }
+                                        enqueueLLMSend(introductionIfNeeded: true)
                                     }
-                                }
-                            )
-                        } else {
-                            ChatButton(namespace: animationNamespace) {
-                                // Cancel any pending dismissal.
-                                chatDismissToken = UUID()
-                                // Cancel any pending LLM send triggered by taps.
-                                pendingLLMSendToken = UUID()
-
-                                withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
-                                    showChat = true
-                                }
-                                showChatOverlay = true
-                                isChatFieldFocused = true
-
-                                // Wait for the open animation to settle before kicking off LLM work.
-                                let token = UUID()
-                                pendingLLMSendToken = token
-                                Task { @MainActor in
-                                    try? await Task.sleep(nanoseconds: 600_000_000)
-                                    guard pendingLLMSendToken == token else { return }
-                                    guard showChat else { return }
-                                    enqueueLLMSend(introductionIfNeeded: true)
                                 }
                             }
                         }
                     }
+                    .padding(.trailing, 16)
+                    .padding(.bottom, 16)
                 }
-                .padding(.trailing, 16)
-                .padding(.bottom, 16)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-        }
-        .sheet(item: $selectedMenuItem) { item in
-            PortfolioRouteView(route: item.route)
+            
+            // Detail Overlay wrapped in Blob Wrapper
+            if let item = selectedMenuItem {
+                BlobModalWrapper(isPresented: Binding(
+                    get: { selectedMenuItem != nil },
+                    set: { if !$0 { selectedMenuItem = nil } }
+                ), dragOffsetY: $detailDragOffsetY) {
+                    PortfolioRouteView(route: item.route)
+                }
+                .zIndex(100) // Ensure it is on top
+                // Use .identity so the wrapper's internal transition (move from bottom) takes precedence
+                .transition(.identity) 
+                .onChange(of: selectedMenuItem != nil) { isOpen in
+                    if !isOpen {
+                        detailDragOffsetY = 0
+                    }
+                }
+            }
         }
         .onAppear {
             model.startKeywordRefreshLoopIfNeeded(chatService: chatService)
