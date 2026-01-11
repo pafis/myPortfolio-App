@@ -14,7 +14,7 @@ struct ContentView: View {
         PortfolioMenuItem(name: "Skills & Languages", route: .skillsAndLanguages),
         PortfolioMenuItem(name: "Professional Experience", route: .experience),
         PortfolioMenuItem(name: "Education", route: .education),
-        PortfolioMenuItem(name: "About me", route: .aboutMe),
+        PortfolioMenuItem(name: "About me", route: .aboutMe)
     ]
 
     @State private var showChat: Bool = false
@@ -30,7 +30,7 @@ struct ContentView: View {
     @State private var typingOutInView: Bool = false
     @State private var pendingAssistantCommitToken = UUID()
 
-    @State private var selectedMenuItem: PortfolioMenuItem? = nil
+    @State private var selectedMenuItem: PortfolioMenuItem?
     @StateObject private var model: ContentViewModel
 
     @MainActor
@@ -71,10 +71,10 @@ struct ContentView: View {
             if selectedMenuItem == nil {
                 VStack {
                     Spacer()
-                    
+
                     HStack {
                         Spacer()
-                        
+
                         // Alignment Container
                         ZStack(alignment: .bottomTrailing) {
                             if showChat {
@@ -141,7 +141,7 @@ struct ContentView: View {
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-            
+
             // Detail Overlay wrapped in Blob Wrapper
             if let item = selectedMenuItem {
                 BlobModalWrapper(isPresented: Binding(
@@ -276,7 +276,7 @@ private struct PortfolioRouteView: View {
 }
 
 // MARK: - ChatButton (Collapsed State)
-fileprivate struct ChatButton: View {
+private struct ChatButton: View {
     var namespace: Namespace.ID
     let action: () -> Void
 
@@ -299,7 +299,7 @@ fileprivate struct ChatButton: View {
 }
 
 // MARK: - ChatBox (Expanded State)
-fileprivate struct ChatBox: View {
+private struct ChatBox: View {
     @Binding var text: String
     var namespace: Namespace.ID
     var isFocused: FocusState<Bool>.Binding
