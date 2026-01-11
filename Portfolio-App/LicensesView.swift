@@ -16,17 +16,7 @@ struct LicensesView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Button {
-                    withAnimation { currentView = .main }
-                } label: {
-                    Label("Back", systemImage: "chevron.left")
-                        .font(.headline)
-                }
-                .buttonStyle(.plain)
-
-                Spacer()
-            }
+            // Back navigation handled by the top header in `Info`.
 
             VStack(alignment: .leading, spacing: 14) {
                 Text("Licenses")

@@ -10,12 +10,16 @@ struct BlobModalWrapper<Content: View>: View {
     @Binding var isPresented: Bool
     let content: Content
 
+    // Optional binding to report the modal's drag offset to a parent
+    private var detailDragOffset: Binding<CGFloat>?
+
     @State private var offsetY: CGFloat = 0
     @State private var isDragging: Bool = false
 
-    init(isPresented: Binding<Bool>, @ViewBuilder content: () -> Content) {
+    init(isPresented: Binding<Bool>, detailDragOffset: Binding<CGFloat>? = nil, @ViewBuilder content: () -> Content) {
         self._isPresented = isPresented
         self.content = content()
+        self.detailDragOffset = detailDragOffset
     }
 
     var body: some View {
@@ -35,6 +39,8 @@ struct BlobModalWrapper<Content: View>: View {
                                         if value.translation.height > 0 {
                                             isDragging = true
                                             offsetY = value.translation.height / 1.1
+                                            // Report the drag delta to the background blob if requested
+                                            detailDragOffset?.wrappedValue = offsetY
                                         }
                                     }
                                     .onEnded { value in
@@ -45,14 +51,17 @@ struct BlobModalWrapper<Content: View>: View {
                                         if translation > 100 || predicted > 200 {
                                             withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                                                 offsetY = geometry.size.height
+                                                detailDragOffset?.wrappedValue = offsetY
                                             }
                                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.38) {
                                                 isPresented = false
                                                 offsetY = 0
+                                                detailDragOffset?.wrappedValue = 0
                                             }
                                         } else {
                                             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                                                 offsetY = 0
+                                                detailDragOffset?.wrappedValue = 0
                                             }
                                         }
                                     }

@@ -31,6 +31,7 @@ struct ContentView: View {
     @State private var pendingAssistantCommitToken = UUID()
 
     @State private var selectedMenuItem: PortfolioMenuItem?
+    @State private var detailDragOffsetY: CGFloat = 0
     @StateObject private var model: ContentViewModel
 
     @MainActor
@@ -60,6 +61,7 @@ struct ContentView: View {
                 debrisInView: $debrisInView,
                 typingOutInView: $typingOutInView,
                 isDetailOpen: selectedMenuItem != nil,
+                detailDragOffsetY: detailDragOffsetY,
                 chatService: chatService,
                 showChatOverlay: showChatOverlay,
                 showTypingIndicator: (chatService.isTyping || isLLMQueued)
@@ -147,7 +149,7 @@ struct ContentView: View {
                 BlobModalWrapper(isPresented: Binding(
                     get: { selectedMenuItem != nil },
                     set: { if !$0 { selectedMenuItem = nil } }
-                )) {
+                ), detailDragOffset: $detailDragOffsetY) {
                     PortfolioRouteView(route: item.route)
                 }
                 .zIndex(100) // Ensure it is on top

@@ -98,7 +98,9 @@ struct AboutMeView: View {
                     .font(.system(.headline, design: .rounded).bold())
             }
 
-            Text("Hi there! I'm Pascal Fischer, a software developer and consultant. I've been programming since the age of 11 and have delivered projects for a wide range of clients. I care about building reliable systems with a strong UX focus — clean architecture, scalable code, and beautiful interfaces. When I'm not shipping software, I'm usually out photographing the world.")
+            Text("""
+I am a Software Engineer with a deep passion for software systems that range from low-level embedded architecture to user-centric mobile applications. My career began early with contributions to the C# Codebook 2010 at the age of 14, establishing a foundation of self-driven learning and technical curiosity.\nOver the last decade, I have balanced my academic studies in Computer Science and Psychology with professional roles that demand high technical versatility.\n\nMy expertise spans the full stack, including Embedded Linux, IoT integration with AWS Greengrass, and cross-platform mobile development.\nWhether conducting architectural reviews for industrial clients or managing the full product lifecycle of my own educational apps, I focus on delivering scalable, maintainable, and efficient code.
+""")
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(.secondary)
                 .lineSpacing(4)

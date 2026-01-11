@@ -14,6 +14,7 @@ struct GlassyCard: ViewModifier {
     func body(content: Content) -> some View {
         content
             .padding(padding)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(.ultraThinMaterial.opacity(0.6))
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             .shadow(color: Color.black.opacity(0.12), radius: 20, x: 0, y: 10)

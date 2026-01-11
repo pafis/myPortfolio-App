@@ -52,17 +52,7 @@ struct Info: View {
     }
 
     private var header: some View {
-        HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Info")
-                    .font(.system(.largeTitle, design: .rounded).bold())
-                Text("Legal, versioning, and app details")
-                    .font(.system(.callout, design: .rounded))
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
+        HStack(alignment: .center, spacing: 12) {
             if currentView != .main {
                 Button {
                     withAnimation { currentView = .main }
@@ -76,6 +66,16 @@ struct Info: View {
                 }
                 .buttonStyle(.plain)
             }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Info")
+                    .font(.system(.largeTitle, design: .rounded).bold())
+                Text("Legal, versioning, and app details")
+                    .font(.system(.callout, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
         }
         .glassyCard(cornerRadius: 32, padding: 20)
     }

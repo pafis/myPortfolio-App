@@ -12,9 +12,39 @@ struct SkillsAndLanguagesView: View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     /// The progress skill categories to display.
-    let data: [ProgressSkillCategory] = [ProgressSkillCategory(name: "Programming Languages\n& Technologies", skills: [ProgressSkill(name: "Java", progress: 1), ProgressSkill(name: "JavaScript", progress: 1), ProgressSkill(name: "SQL/Datenbanken", progress: 1), ProgressSkill(name: "ASP.NET", progress: 1), ProgressSkill(name: "C", progress: 1), ProgressSkill(name: "C++", progress: 1), ProgressSkill(name: "C#", progress: 1), ProgressSkill(name: "Objective-C", progress: 1), ProgressSkill(name: "Kotlin", progress: 1), ProgressSkill(name: "Swift", progress: 1), ProgressSkill(name: "Clojure", progress: 3 / 5), ProgressSkill(name: "Python", progress: 3 / 5), ProgressSkill(name: "Latex", progress: 3 / 5)], icon: "chevron.left.forwardslash.chevron.right", font: .title2),
-                                         ProgressSkillCategory(name: "Spoken Languages", skills: [ProgressSkill(name: "German", progress: 1), ProgressSkill(name: "English", progress: 1)], icon: "person.wave.2", font: .title),
-                                         ProgressSkillCategory(name: "Software Tools", skills: [ProgressSkill(name: "Xcode", progress: 1), ProgressSkill(name: "Visual Studio", progress: 1), ProgressSkill(name: "Android Studio", progress: 1), ProgressSkill(name: "Eclipse", progress: 1), ProgressSkill(name: "Microsoft Office", progress: 1), ProgressSkill(name: "3Ds Max", progress: 3 / 5), ProgressSkill(name: "Adobe CC Master Suite", progress: 1), ProgressSkill(name: "Unity", progress: 2 / 5), ProgressSkill(name: "Unreal Engine", progress: 3 / 5)], icon: "pencil.slash", font: .title)]
+    let data: [ProgressSkillCategory] = [
+        ProgressSkillCategory(name: "Programming Languages\n& Technologies", skills: [
+            ProgressSkill(name: "C#", progress: 1),
+            ProgressSkill(name: "C/C++", progress: 1),
+            ProgressSkill(name: "Swift", progress: 1),
+            ProgressSkill(name: "Kotlin", progress: 1),
+            ProgressSkill(name: "Java", progress: 1),
+            ProgressSkill(name: "JavaScript/TypeScript", progress: 1),
+            ProgressSkill(name: "Objective-C", progress: 1),
+            ProgressSkill(name: "SQL", progress: 1),
+            ProgressSkill(name: "Python", progress: 0.8),
+            ProgressSkill(name: "Rust", progress: 0.6),
+            ProgressSkill(name: "PHP", progress: 0.6),
+            ProgressSkill(name: "Clojure", progress: 0.6)
+        ], icon: "chevron.left.forwardslash.chevron.right", font: .title2),
+
+        ProgressSkillCategory(name: "Spoken Languages", skills: [
+            ProgressSkill(name: "German (Native)", progress: 1),
+            ProgressSkill(name: "English (C2)", progress: 1)
+        ], icon: "person.wave.2", font: .title),
+
+        ProgressSkillCategory(name: "Frameworks & Tools", skills: [
+            ProgressSkill(name: "iOS/Android", progress: 1),
+            ProgressSkill(name: ".NET MAUI", progress: 1),
+            ProgressSkill(name: "Yocto/KAS", progress: 0.9),
+            ProgressSkill(name: "AWS Greengrass", progress: 0.8),
+            ProgressSkill(name: "React/Angular", progress: 0.7),
+            ProgressSkill(name: "Power Apps", progress: 0.8),
+            ProgressSkill(name: "WPF/WinForms", progress: 0.8),
+            ProgressSkill(name: "Xcode", progress: 1),
+            ProgressSkill(name: "Visual Studio", progress: 1)
+        ], icon: "pencil.slash", font: .title)
+    ]
 
     var body: some View {
         ScrollView {
@@ -22,7 +52,7 @@ struct SkillsAndLanguagesView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Skills & Languages")
                         .font(.system(.largeTitle, design: .rounded).bold())
-                    Text("A quick snapshot of what I use daily")
+                    Text("A quick snapshot of what I used in my projects")
                         .font(.system(.callout, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
