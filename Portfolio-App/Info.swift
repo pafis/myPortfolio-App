@@ -7,12 +7,8 @@
 
 import SwiftUI
 
-import SwiftUI
-
-/// This is the Info View
 struct Info: View {
-    /// The current view state
-    @State var currentView: InfoNavigationEnum = .main
+    @State private var currentView: InfoNavigationEnum = .main
 
     /// The possible views for the Info View
     enum InfoNavigationEnum {
@@ -24,89 +20,127 @@ struct Info: View {
 
     var body: some View {
         ScrollView {
-            StickyHeader {
-                ZStack {
-                    Image(.infoHeader)
-                        .renderingMode(.original)
-                        .resizable(resizingMode: .stretch)
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 400)
-                    Text("Info")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(Color.black)
-                        .padding(.top, 40)
+            VStack(alignment: .leading, spacing: 20) {
+                header
+
+                Group {
+                    switch currentView {
+                    case .main:
+                        mainMenu
+                            .transition(.asymmetric(insertion: .move(edge: .leading).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
+                    case .licenses:
+                        LicensesView(currentView: $currentView)
+                            .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .trailing).combined(with: .opacity)))
+                    case .imprint:
+                        ImprintView(currentView: $currentView)
+                            .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .trailing).combined(with: .opacity)))
+                    case .version:
+                        VersionView(currentView: $currentView)
+                            .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .trailing).combined(with: .opacity)))
+                    }
                 }
+
+                Spacer(minLength: 24)
             }
-            ZStack {
-                BackgroundView().blur(radius: 40)
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.primaryTile.opacity(0.9), Color.clear]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                VStack {
-                    if currentView == .main {
-                        TileDetailsView(title: "Info") {
-                            VStack {
-                                HStack {
-                                    Text("Licenses")
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                }.contentShape(Rectangle()).padding(5)
-                                    .onTapGesture {
-                                        withAnimation {
-                                            currentView = .licenses
-                                        }
-                                    }
-                                Divider()
-                                HStack {
-                                    Text("Imprint")
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                }.contentShape(Rectangle()).padding(5)
-                                    .onTapGesture {
-                                        withAnimation {
-                                            currentView = .imprint
-                                        }
-                                    }
-                                Divider()
-                                HStack {
-                                    Text("Version")
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                }.contentShape(Rectangle()).padding(5)
-                                    .onTapGesture {
-                                        withAnimation {
-                                            currentView = .version
-                                        }
-                                    }
-                            }.padding(10)
+            .padding(.horizontal, 20)
+            .padding(.top, 24)
+            .padding(.bottom, 24)
+            .animation(.spring(response: 0.45, dampingFraction: 0.85), value: currentView)
+        }
+        .scrollIndicators(.hidden)
+        .background(Color.clear)
+    }
 
-                        }.frame(height: 150)
-                            .padding(.top, 30)
-                    }
-                    if currentView == .licenses { LicensesView(currentView: $currentView)
-                        .padding(.top, 30)
-                        .transition(.move(edge: .trailing))
-                    }
-                    if currentView == .imprint { ImprintView(currentView: $currentView)
-                        .padding(.top, 30)
-                        .transition(.move(edge: .trailing))
-                    }
-                    if currentView == .version { VersionView(currentView: $currentView)
-                        .padding(.top, 30)
-                        .transition(.move(edge: .trailing))
-                    }
-                    Spacer()
-                }.frame(minHeight: 750)
-                    .padding(.horizontal, 10)
+    private var header: some View {
+        HStack(alignment: .center, spacing: 12) {
+            if currentView != .main {
+                Button {
+                    withAnimation { currentView = .main }
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .bold))
+                        .frame(width: 44, height: 44)
+                        .background(.ultraThinMaterial)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 0.5))
+                }
+                .buttonStyle(.plain)
+            }
 
-            }.clipShape(UnevenRoundedRectangle(cornerRadii: RectangleCornerRadii(topLeading: 30.0, topTrailing: 30.0)))
-                .padding(.top, -42.0)
-                .padding(.bottom, -30)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Info")
+                    .font(.system(.largeTitle, design: .rounded).bold())
+                Text("Legal, versioning, and app details")
+                    .font(.system(.callout, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
 
-        }.scrollIndicators(.hidden)
+            Spacer()
+        }
+        .glassyCard(cornerRadius: 32, padding: 20)
+    }
+
+    private var mainMenu: some View {
+        VStack(spacing: 8) {
+            InfoRow(title: "Licenses", subtitle: "Third‑party notices", systemImage: "doc.text.fill", color: .blue) {
+                withAnimation { currentView = .licenses }
+            }
+
+            Divider()
+                .padding(.leading, 56)
+                .opacity(0.3)
+
+            InfoRow(title: "Imprint", subtitle: "Publisher details", systemImage: "building.2.fill", color: .purple) {
+                withAnimation { currentView = .imprint }
+            }
+
+            Divider()
+                .padding(.leading, 56)
+                .opacity(0.3)
+
+            InfoRow(title: "Version", subtitle: "Build and app version", systemImage: "number.square.fill", color: .green) {
+                withAnimation { currentView = .version }
+            }
+        }
+        .glassyCard(cornerRadius: 32, padding: 20)
+    }
+}
+
+private struct InfoRow: View {
+    let title: String
+    let subtitle: String
+    let systemImage: String
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
+                    .background(color.gradient)
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(.headline, design: .rounded).bold())
+                        .foregroundStyle(.primary)
+                    Text(subtitle)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.tertiary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 

@@ -7,20 +7,8 @@
 
 import SwiftUI
 
-// Define a struct called Ball
-struct Ball {
-    // The level of the ball
-    let level: Int
-    // The name of the ball
+struct PortfolioMenuItem: Identifiable {
+    let id: UUID = UUID()
     let name: String
-    // The view of the ball
-    let view: AnyView
-    // The image of the ball
-    let image: UIImage
-    // The size of the text on the ball
-    let textSize: CGFloat
-    // The color of the ball, which can be nil if it hasn't been assigned yet
-    var color: UIColor?
-    // The position of the ball
-    var startPosition: CGPoint = .zero
+    let route: PortfolioRoute
 }

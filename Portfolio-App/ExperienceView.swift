@@ -7,47 +7,38 @@
 
 import SwiftUI
 
-/// This is the Professional Experience View
 struct ExperienceView: View {
     let cvEvents: [CVEvent] = [
-        CVEvent(beginningYear: 2009, endingYear: 2010, title: "Book Chapter Contributions", description: "C# Codebook 2010 by Jürgen Bayer", details: "Contributed to 'Detecting Hardware IDs', 'Generating and Validating License Keys' at the age of 14"),
-        CVEvent(beginningYear: 2013, endingYear: 2015, title: "myElly/Educolix-App", description: "iOS, Android, Web-Technologies", details: "Development, Operation and Maintanance of a school information app for teachers and students to access, news of the school, messages from the school administrators, as well as view their class schedules with real-time updates on substitutions and cancellations."),
-        CVEvent(beginningYear: 2015, endingYear: 2020, title: "myElly/Educolix-App", description: "iOS, Android, Web-Technologies", details: "Development, Operation & Maintanance for multiple schools"),
-        CVEvent(beginningYear: 2017, endingYear: nil, title: "ITQ GmbH", description: "Employed as Junior Software Engineer/Consultant in the field of Mechanical Engineering", details: "Front- & Backend, as well as Embedded Linux Software development with multiple Technologies"),
-        CVEvent(beginningYear: 2019, endingYear: nil, title: "Freelancing Software-Developer\n&\nConsultant", description: "Mobil-, Desktop-, Web-Technologies", details: ""),
+        CVEvent(beginningYear: 2009, endingYear: 2010, title: "Book Chapter Contributions", description: "C# Codebook 2010 by Jürgen Bayer", details: "Contributed to 'Detecting Hardware IDs', 'Generating and Validating License Keys' at the age of 14."),
+
+        CVEvent(beginningYear: 2012, endingYear: 2020, title: "myElly / Educolix", description: "Founder & Developer", details: "Architected a cross-platform school information system (iOS/Android/Web) with 500+ active users. Managed full product lifecycle from concept to operations."),
+
+        CVEvent(beginningYear: 2017, endingYear: nil, title: "ITQ GmbH", description: "Software Engineer / Consultant (Working Student)", details: "• Laboratory Tech: Custom Yocto/KAS layers & HMI interfaces.\n• Industrial IoT: KPI framework using Python & AWS Greengrass.\n• Rail Industry: Research on cross-manufacturer train control interconnects (C/C++).\n• Packaging Industry: KPI dashboard for production lines."),
+
+        CVEvent(beginningYear: 2019, endingYear: nil, title: "Freelance", description: "Software Engineer / Consultant", details: "• Telecom: Mobile apps for network construction (Swift/Kotlin/Obj-C).\n• Retail: Automated sales reporting & Shopify (Power Apps, JS, WPF).\n• AdTech: Mobile app for campaign management (.NET MAUI).")
     ]
     var body: some View {
         ScrollView {
-            // The sticky header
-            StickyHeader {
-                ZStack {
-                    Image(.professionalExperienceHeader)
-                        .renderingMode(.original)
-                        .resizable(resizingMode: .stretch)
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 700)
-                    Text("Professional\nExperience")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(Color.white)
-                        .padding(.top, 30)
+            VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Experience")
+                        .font(.system(.largeTitle, design: .rounded).bold())
+                    Text("Highlights across roles and projects")
+                        .font(.system(.callout, design: .rounded))
+                        .foregroundStyle(.secondary)
                 }
-            }
-            // The timeline view
-            ZStack {
-                BackgroundView().blur(radius: 40)
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.primaryTile.opacity(0.9), Color.clear]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
+                .glassyCard(cornerRadius: 32, padding: 20)
+                .padding(.top, 24)
+
                 CVTimeLineView(events: cvEvents)
 
-            }.clipShape(UnevenRoundedRectangle(cornerRadii: RectangleCornerRadii(topLeading: 30.0, topTrailing: 30.0)))
-                .padding(.top, -42.0)
-                .padding(.bottom, -30)
-
-        }.scrollIndicators(.hidden)
+                Spacer(minLength: 24)
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 24)
+        }
+        .scrollIndicators(.hidden)
+        .background(Color.clear)
     }
 }
 

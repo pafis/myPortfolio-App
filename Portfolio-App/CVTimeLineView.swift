@@ -7,109 +7,63 @@
 
 import SwiftUI
 
-/// This is the CVTimeLineView that visualizes an array of CV events.
 struct CVTimeLineView: View {
-    let events: [CVEvent] // An array of CV events
+    let events: [CVEvent]
 
     var body: some View {
-        VStack(alignment: .leading) {
-            // The timeline dots
-            VStack {
-                Circle().fill(.white)
-                    .frame(width: 5)
-                    .padding(2.5)
-
-                    .background {
-                        Circle().fill(.cvDot).opacity(0.2).frame(width: 10)
-                    }
-
-                Circle().fill(.white)
-                    .frame(width: 5)
-                    .padding(2.5)
-
-                    .background {
-                        Circle().fill(.cvDot).opacity(0.5).frame(width: 10)
-                    }
-            }.padding(.leading, 108)
-
-            // The timeline events
+        VStack(alignment: .leading, spacing: 14) {
             ForEach(events) { event in
-                // The timeline event row
-                HStack {
-                    // The timeline event date
-                    HStack {
-                        Text(event.dateRange).frame(width: 130.0)
-                            .multilineTextAlignment(.trailing)
-                            .padding(.leading, -15.0)
-                    }
-                    .frame(width: 100.0)
+                TimelineRow(event: event)
+            }
+        }
+    }
+}
 
-                    // The timeline event dot
-                    Circle().fill(.white)
-                        .frame(width: 5)
-                        .padding(2.5)
-                        .background {
-                            Circle().fill(.cvDot).frame(width: 10)
-                        }
+private struct TimelineRow: View {
+    let event: CVEvent
 
-                    Spacer()
+    var body: some View {
+        HStack(alignment: .top, spacing: 16) {
+            VStack(spacing: 8) {
+                Circle()
+                    .fill(
+                        LinearGradient(colors: [.white, .white.opacity(0.5)], startPoint: .top, endPoint: .bottom)
+                    )
+                    .frame(width: 14, height: 14)
+                    .shadow(color: .white.opacity(0.5), radius: 4)
+
+                Rectangle()
+                    .fill(
+                        LinearGradient(colors: [.white.opacity(0.35), .clear], startPoint: .top, endPoint: .bottom)
+                    )
+                    .frame(width: 2)
+                    .frame(maxHeight: .infinity)
+            }
+            .frame(width: 18)
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text(event.dateRange)
+                    .font(.system(.caption, design: .rounded).bold())
+                    .foregroundStyle(.blue)
+
+                Text(event.title)
+                    .font(.system(.headline, design: .rounded).bold())
+
+                if !event.description.isEmpty {
+                    Text(event.description)
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.primary)
                 }
 
-                // The timeline event details
-                HStack(alignment: .top) {
-                    // The timeline event line
-                    VStack(alignment: .leading) {
-                        Rectangle().fill(.blue).frame(width: 5)
-                            .frame(minHeight: CGFloat(35 * event.YearRange))
-                    }
-
-                    // The timeline event content
-                    HStack {
-                        VStack {
-                            VStack {
-                                Text(event.title)
-                                    .font(.callout)
-                                    .fontWeight(.bold)
-                                    .multilineTextAlignment(.center).lineLimit(nil)
-                                Text(event.description)
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .multilineTextAlignment(.center)
-                                    .padding(.top, 5)
-
-                                Text(event.details)
-                                    .font(.caption)
-                                    .fontWeight(.light)
-                                    .padding(.top, 5)
-                                    .multilineTextAlignment(.center)
-                                    .lineLimit(5)
-                            }.padding(10)
-
-                                .frame(width: 175)
-                                .frame(minHeight: 200)
-                                .background(content: {
-                                    Color.blue
-                                }).clipShape(RoundedRectangle(cornerRadius: 10))
-
-                            Spacer()
-                        }
-                    }
-
-                }.padding(.leading, 111)
+                if !event.details.isEmpty {
+                    Text(event.details)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .lineSpacing(3)
+                }
             }
-
-            // The timeline dots
-            VStack {
-                Rectangle().fill(.blue).frame(width: 5)
-                    .frame(height: 5).padding(.top, 5).opacity(1)
-
-                Rectangle().fill(.blue).frame(width: 5)
-                    .frame(height: 5).padding(.top, 5).opacity(0.5)
-
-                Rectangle().fill(.blue).frame(width: 5)
-                    .frame(height: 5).padding(.top, 5).opacity(0.2)
-            }.padding(.leading, 111)
-
-        }.padding(.vertical, 50).frame(width: 300)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .glassyCard(cornerRadius: 32, padding: 20)
+        }
     }
 }

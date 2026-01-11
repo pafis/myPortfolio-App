@@ -35,6 +35,7 @@ struct CircleData: Identifiable {
             y: CGFloat.random(in: 0 ... 1) // Randomly generate the y velocity of the circle
         )
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + Double.random(in: 0.5 ... 3.0)) {} // A placeholder closure for future use
+        // The asyncAfter placeholder was unused and added no side‑effects.
+        // It has been removed to keep the initializer side‑effect free.
     }
 }
