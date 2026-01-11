@@ -1,3 +1,9 @@
+//  ChatScrollOverlay.swift
+//  Portfolio-App
+//
+//  Created by Pascal Fischer on 01/09/26.
+//
+
 import SwiftUI
 import Foundation
 import Combine
@@ -5,8 +11,8 @@ import Combine
 import UIKit
 #endif
 
+// Simple in-file cache for AttributedString values used by messages.
 private final class AttributedStringCache: ObservableObject {
-    // Intentionally not @Published: caching should not trigger view updates.
     private var storage: [UUID: (source: String, value: AttributedString)] = [:]
 
     func value(for id: UUID, source: String, compute: () -> AttributedString) -> AttributedString {
@@ -366,7 +372,7 @@ struct ChatScrollOverlay: View {
             }
         }
     }
-    
+
     var body: some View {
         GeometryReader { geo in
             ScrollViewReader { proxy in
@@ -402,7 +408,7 @@ struct ChatScrollOverlay: View {
 
                                 let measuredWidth = messageTextSizes[msg.id]?.width ?? maxBubbleWidth
                                 let bubbleWidth = min(maxBubbleWidth, max(60, measuredWidth))
-                                
+
                                 let yOffset: CGFloat = {
                                     if let b = blob, let target = b.targetPosition {
                                         return b.position.y - target.y
@@ -535,7 +541,7 @@ struct ChatScrollOverlay: View {
                             dismissKeyboard()
                         }
                     )
-                    .onChange(of: chatService.messages.count) { _ in
+                    .onChange(of: chatService.messages.count) { _, _ in
                         scrollToBottom(proxy, animated: true)
                         // Ensure the "scroll to bottom" button hides immediately when we auto-scroll.
                         isAtBottom = true
@@ -543,7 +549,7 @@ struct ChatScrollOverlay: View {
                         // Drop cache entries for messages that no longer exist.
                         pruneAttributedCache(typingRowVisible: typingRowVisible)
                     }
-                    .onChange(of: showTypingIndicator) { isShown in
+                    .onChange(of: showTypingIndicator) { _, isShown in
                         // When the typing indicator appears, keep the view pinned to bottom.
                         if isShown {
                             scrollToBottom(proxy, animated: true)

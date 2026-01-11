@@ -2,7 +2,7 @@
 //  ContentViewModel.swift
 //  Portfolio-App
 //
-//  Created by Pascal Fischer on 09.01.26.
+//  Created by Pascal Fischer on 01/09/26.
 //
 
 import Foundation
@@ -52,7 +52,6 @@ final class ContentViewModel: ObservableObject {
                 if keywordTopics.isEmpty {
                     keywordTopics = defaultKeywordTopics()
                 }
-                stopKeywordRefreshLoop()
             }
             // -3 (busy) / -12 (not ready) and other transient errors: keep current topics.
             print("Keyword generation error: \(error)")
@@ -66,7 +65,7 @@ final class ContentViewModel: ObservableObject {
             "Featured Projects",
             "Key Skills",
             "Leadership Style",
-            "Education Background",
+            "Education Background"
         ]
         return topics.map { t in
             ChatService.MenuKeyword(keyword: t, question: "What can you tell me about \(t) in Pascal Fischer's portfolio?")

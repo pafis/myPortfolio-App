@@ -9,7 +9,7 @@ import SwiftUI
 struct Education: View {
     let cvEvents: [CVEvent] = [
         CVEvent(beginningYear: 2006, endingYear: 2015, title: "Higher Education Entrance Qualification", description: "Elly-Heuss-Knapp-Gymnasium", details: "Duisburg, Germany"),
-        CVEvent(beginningYear: 2015, endingYear: nil, title: "Bachelor's Degree Program", description: "Heinrich-Heine-Universität Düsseldorf", details: "in Computer Science (Major) /\nPsychology (Minor)"),
+        CVEvent(beginningYear: 2015, endingYear: nil, title: "Bachelor's Degree Program", description: "Heinrich-Heine-Universität Düsseldorf", details: "in Computer Science (Major) /\nPsychology (Minor)")
     ]
     var body: some View {
         ScrollView {

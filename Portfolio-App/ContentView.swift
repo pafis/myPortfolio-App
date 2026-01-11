@@ -20,10 +20,9 @@ struct ContentView: View {
     @State private var showChat: Bool = false
     @State private var showChatOverlay: Bool = false
     @State private var chatText: String = ""
-    @StateObject private var chatService = ChatService()
+    @StateObject private var chatService: ChatService
     @Namespace private var animationNamespace
     @FocusState private var isChatFieldFocused: Bool
-
     @State private var chatDismissToken = UUID()
     @State private var pendingLLMSendToken = UUID()
     @State private var debrisInView: Bool = false
@@ -32,7 +31,15 @@ struct ContentView: View {
     @State private var pendingAssistantCommitToken = UUID()
 
     @State private var selectedMenuItem: PortfolioMenuItem? = nil
-    @StateObject private var model = ContentViewModel()
+    @StateObject private var model: ContentViewModel
+
+    @MainActor
+    init(chatService: ChatService? = nil, model: ContentViewModel? = nil) {
+        let chatService = chatService ?? ChatService()
+        let model = model ?? ContentViewModel()
+        _chatService = StateObject(wrappedValue: chatService)
+        _model = StateObject(wrappedValue: model)
+    }
 
     var body: some View {
         ZStack {
@@ -150,7 +157,7 @@ struct ContentView: View {
         .onAppear {
             model.startKeywordRefreshLoopIfNeeded(chatService: chatService)
         }
-        .onChange(of: chatService.pendingAssistantReply) { newValue in
+        .onChange(of: chatService.pendingAssistantReply) { _, newValue in
             guard newValue != nil else { return }
 
             // Cancel any pending commit and schedule a new one.
@@ -310,7 +317,6 @@ fileprivate struct ChatBox: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.white)
-                    // Kept at 44 to match Send button height for symmetry in the row
                     .frame(width: 44, height: 44)
                     .background(
                         Circle()
@@ -363,13 +369,12 @@ fileprivate struct ChatBox: View {
                 .overlay(Circle().stroke(Color.white.opacity(0.4), lineWidth: 1))
                 .transition(.move(edge: .trailing).combined(with: .scale).combined(with: .opacity))
                 .zIndex(1)
-                // Add padding to align visually with the text input if it's single line
                 .padding(.bottom, 2)
             }
         }
         .padding(.leading, 16)
         .transition(.scale(scale: 0.98, anchor: .bottomTrailing).combined(with: .opacity))
-        .onChange(of: text) { newValue in
+        .onChange(of: text) { _, newValue in
             let shouldShow = !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             if shouldShow != isSendVisible {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {

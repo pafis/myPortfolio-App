@@ -14,7 +14,7 @@ import FoundationModels
 public final class ChatService: ObservableObject {
     @Published public var messages: [ChatMessage] = []
     @Published public var isTyping = false
-    @Published public private(set) var pendingAssistantReply: String? = nil
+    @Published public private(set) var pendingAssistantReply: String?
 
     private var systemPrompt: String { ChatSystemPrompt.make() }
 
@@ -41,7 +41,7 @@ Requirements:
         return created
     }
 #endif
-    
+
     public init() {}
 
     public struct MenuKeyword: Codable, Identifiable, Equatable {

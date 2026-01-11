@@ -7,9 +7,8 @@
 
 import CoreMotion
 
-
 /// A class that manages gyroscope motion updates.
-class MotionManager: ObservableObject {
+class MotionManager: ObservableObject, MotionServiceProtocol {
     /// The Core Motion manager used to receive gyroscope updates.
     private let motionManager = CMMotionManager()
 

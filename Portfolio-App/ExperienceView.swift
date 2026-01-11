@@ -13,7 +13,7 @@ struct ExperienceView: View {
         CVEvent(beginningYear: 2013, endingYear: 2015, title: "myElly/Educolix-App", description: "iOS, Android, Web-Technologies", details: "Development, Operation and Maintanance of a school information app for teachers and students to access, news of the school, messages from the school administrators, as well as view their class schedules with real-time updates on substitutions and cancellations."),
         CVEvent(beginningYear: 2015, endingYear: 2020, title: "myElly/Educolix-App", description: "iOS, Android, Web-Technologies", details: "Development, Operation & Maintanance for multiple schools"),
         CVEvent(beginningYear: 2017, endingYear: nil, title: "ITQ GmbH", description: "Employed as Junior Software Engineer/Consultant in the field of Mechanical Engineering", details: "Front- & Backend, as well as Embedded Linux Software development with multiple Technologies"),
-        CVEvent(beginningYear: 2019, endingYear: nil, title: "Freelancing Software-Developer\n&\nConsultant", description: "Mobil-, Desktop-, Web-Technologies", details: ""),
+        CVEvent(beginningYear: 2019, endingYear: nil, title: "Freelancing Software-Developer\n&\nConsultant", description: "Mobil-, Desktop-, Web-Technologies", details: "")
     ]
     var body: some View {
         ScrollView {

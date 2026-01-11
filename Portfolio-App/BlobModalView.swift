@@ -1,28 +1,28 @@
+//  BlobModalView.swift
+//  Portfolio-App
+//
+//  Created by Pascal Fischer on 01/09/26.
+//
+
 import SwiftUI
 
 struct BlobModalWrapper<Content: View>: View {
     @Binding var isPresented: Bool
-    // Optional binding used by callers that want the current drag offset
-    var dragOffsetY: Binding<CGFloat>?
     let content: Content
 
     @State private var offsetY: CGFloat = 0
     @State private var isDragging: Bool = false
 
-    init(isPresented: Binding<Bool>, dragOffsetY: Binding<CGFloat>? = nil, @ViewBuilder content: () -> Content) {
+    init(isPresented: Binding<Bool>, @ViewBuilder content: () -> Content) {
         self._isPresented = isPresented
-        self.dragOffsetY = dragOffsetY
         self.content = content()
     }
 
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Nearly transparent background to capture taps
-
                 // Modal panel
                 ZStack {
-
 
                     // Top invisible grabber area — captures dismissal drags
                     VStack(spacing: 0) {
@@ -71,9 +71,6 @@ struct BlobModalWrapper<Content: View>: View {
                 .position(x: geometry.size.width / 2, y: geometry.size.height / 2 + (geometry.size.height * 0.04))
                 .offset(y: offsetY)
                 .scaleEffect(isDragging ? 0.98 : 1.0)
-                .onChange(of: offsetY) { newValue in
-                    dragOffsetY?.wrappedValue = newValue
-                }
             }
         }
         .transition(.move(edge: .bottom).combined(with: .opacity))

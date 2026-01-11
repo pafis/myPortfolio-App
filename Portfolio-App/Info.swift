@@ -85,19 +85,19 @@ struct Info: View {
             InfoRow(title: "Licenses", subtitle: "Third‑party notices", systemImage: "doc.text.fill", color: .blue) {
                 withAnimation { currentView = .licenses }
             }
-            
+
             Divider()
                 .padding(.leading, 56)
                 .opacity(0.3)
-            
+
             InfoRow(title: "Imprint", subtitle: "Publisher details", systemImage: "building.2.fill", color: .purple) {
                 withAnimation { currentView = .imprint }
             }
-            
+
             Divider()
                 .padding(.leading, 56)
                 .opacity(0.3)
-            
+
             InfoRow(title: "Version", subtitle: "Build and app version", systemImage: "number.square.fill", color: .green) {
                 withAnimation { currentView = .version }
             }

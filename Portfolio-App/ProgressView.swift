@@ -21,7 +21,10 @@ struct CircularProgressView: View {
             ZStack {
                 Group {
                     Circle().trim(from: 0.5, to: 1).stroke(Color.gray.opacity(0.3), style: StrokeStyle(lineWidth: strokeLineWidth))
-                    Circle().trim(from: 0.5, to: isAnimating ? (0.5 + self.progress / 2) : 0.0).stroke(Color.blue, style: StrokeStyle(lineWidth: strokeLineWidth)).animation(Animation.easeInOut(duration: 1))
+                    Circle()
+                        .trim(from: 0.5, to: isAnimating ? (0.5 + self.progress / 2) : 0.0)
+                        .stroke(Color.blue, style: StrokeStyle(lineWidth: strokeLineWidth))
+                        .animation(.easeInOut(duration: 1), value: isAnimating)
                 }
                 Text(text)
                     .font(.system(size: strokeLineWidth * 1.5))

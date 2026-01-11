@@ -38,11 +38,11 @@ public struct MenuBlobState: Identifiable {
     public let id = UUID()
     public var text: String
     public var isDummy: Bool
-    public var menuItemID: UUID? = nil
+    public var menuItemID: UUID?
     public var baseRadius: CGFloat
     private var originalRadius: CGFloat
     public let baseSpeed: CGFloat
-    public var currentSpeed: CGFloat   
+    public var currentSpeed: CGFloat
     public let waitTime: TimeInterval
     public let wobbleSeed: Float
 
@@ -56,7 +56,7 @@ public struct MenuBlobState: Identifiable {
     public var simVelocity: CGVector = .zero
     public var velocity: CGVector = .zero // points/second
     // Normalized lane position (0..1) for stable menu blob X placement.
-    public var laneT: CGFloat? = nil
+    public var laneT: CGFloat?
     public var targetPosition: CGPoint?
     public var status: BlobStatus = .idle
     public var waitStart = Date()
@@ -172,7 +172,7 @@ public struct MenuBlobState: Identifiable {
         self.bubbleWidth = frame.width
         self.bubbleHeight = frame.height
         self.targetPosition = CGPoint(x: frame.midX, y: frame.midY)
-        
+
         if self.isAnchored {
             self.position = self.targetPosition!
             self.previousPosition = self.position
