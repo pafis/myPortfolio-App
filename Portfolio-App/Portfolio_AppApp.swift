@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct Portfolio_AppApp: App {
+    // Composition root
+    private let container = AppDependencyContainer()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(chatService: container.chatService, model: container.contentViewModel)
         }
     }
 }

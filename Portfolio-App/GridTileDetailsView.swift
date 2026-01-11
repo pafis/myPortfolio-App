@@ -7,23 +7,11 @@
 
 import SwiftUI
 
-import SwiftUI
-
-/// A view that displays a grid tile with a title, content, and icon.
 struct GridTileDetailsView<Content: View>: View {
-    /// The title of the grid tile details view.
     var title: String
-    /// The content of the grid tile details view.
     var content: Content
-    /// The icon of the grid tile details view.
     var icon: String
-    /// The font of the grid tile details view.
     var font: Font
-
-    /// Creates a grid tile details view with a title and content.
-    /// - Parameters:
-    ///   - title: The title of the grid tile details view.
-    ///   - content: The content of the grid tile details view.
     init(title: String, @ViewBuilder content: () -> Content) {
         self.title = title
         icon = ""
@@ -31,11 +19,6 @@ struct GridTileDetailsView<Content: View>: View {
         font = .title
     }
 
-    /// Creates a grid tile details view with a title, icon, and content.
-    /// - Parameters:
-    ///   - title: The title of the grid tile details view.
-    ///   - icon: The icon of the grid tile details view.
-    ///   - content: The content of the grid tile details view.
     init(title: String, icon: String, @ViewBuilder content: () -> Content) {
         self.title = title
         self.icon = icon
@@ -43,12 +26,6 @@ struct GridTileDetailsView<Content: View>: View {
         font = .title
     }
 
-    /// Creates a grid tile details view with a title, icon, font, and content.
-    /// - Parameters:
-    ///   - title: The title of the grid tile details view.
-    ///   - icon: The icon of the grid tile details view.
-    ///   - font: The font of the grid tile details view.
-    ///   - content: The content of the grid tile details view.
     init(title: String, icon: String, font: Font, @ViewBuilder content: () -> Content) {
         self.title = title
         self.icon = icon

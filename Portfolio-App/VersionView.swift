@@ -7,47 +7,64 @@
 
 import SwiftUI
 
-/// A view that displays the version and build number of the app.
 struct VersionView: View {
-    /// The current view state.
     @Binding var currentView: Info.InfoNavigationEnum
 
     var body: some View {
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
         let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
 
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Button(action: {
-                    withAnimation {
-                        currentView = .main
-                    }
-                }) {
-                    Image(systemName: "chevron.left").padding(.trailing, 2)
-                    Text("Back")
+                Button {
+                    withAnimation { currentView = .main }
+                } label: {
+                    Label("Back", systemImage: "chevron.left")
+                        .font(.headline)
                 }
-                .padding()
-                .foregroundColor(.primary)
+                .buttonStyle(.plain)
 
-            }.padding(.bottom, 5)
-            TileDetailsView(title: "Version") {
-                VStack {
-                    HStack {
-                        Text("Version \(appVersion)")
-                        Spacer()
-                    }.padding(5)
-                    Divider()
-                    HStack {
-                        Text("Build \(buildNumber)")
-                        Spacer()
-                    }.padding(5)
-                }.padding(10)
+                Spacer()
+            }
 
-            }.frame(height: 100)
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Version")
+                    .font(.system(.title2, design: .rounded).bold())
+
+                HStack {
+                    Text("App")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(appVersion)
+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                }
+
+                Divider()
+                    .opacity(0.3)
+
+                HStack {
+                    Text("Build")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(buildNumber)
+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                }
+            }
+            .glassyCard(cornerRadius: 32, padding: 20)
         }
     }
 }
 
 #Preview {
-    VersionView(currentView: Info().$currentView)
+    struct PreviewHost: View {
+        @State private var currentView: Info.InfoNavigationEnum = .version
+
+        var body: some View {
+            VersionView(currentView: $currentView)
+        }
+    }
+
+    return PreviewHost()
 }

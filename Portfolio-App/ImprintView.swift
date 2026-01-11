@@ -7,38 +7,55 @@
 
 import SwiftUI
 
-/// This is the Imprint View
-import SwiftUI
-
-/// This is the Imprint View
 struct ImprintView: View {
-    /// The current view binding
     @Binding var currentView: Info.InfoNavigationEnum
 
+    private var imprintText: AttributedString? {
+        RTFResourceLoader.loadAttributedString(named: "Imprint")
+    }
+
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Button(action: {
-                    withAnimation {
-                        currentView = .main
-                    }
-                }) {
-                    Image(systemName: "chevron.left").padding(.trailing, 2)
-                    Text("Back")
+                Button {
+                    withAnimation { currentView = .main }
+                } label: {
+                    Label("Back", systemImage: "chevron.left")
+                        .font(.headline)
                 }
-                .padding()
-                .foregroundColor(.primary)
+                .buttonStyle(.plain)
 
-            }.padding(.bottom, 5)
-            TileDetailsView(title: "Imprint") {
-                let licenseText = try? NSAttributedString(url: Bundle.main.url(forResource: "Imprint", withExtension: "rtf")!, options: [:], documentAttributes: nil)
-
-                let convertedAttrString = try? AttributedString(licenseText ?? NSAttributedString(string: ""), including: \.uiKit)
+                Spacer()
             }
+
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Imprint")
+                    .font(.system(.title2, design: .rounded).bold())
+
+                if let imprintText {
+                    Text(imprintText)
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .lineSpacing(4)
+                } else {
+                    Text("Imprint content not available.")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .glassyCard(cornerRadius: 32, padding: 20)
         }
     }
 }
 
 #Preview {
-    ImprintView(currentView: Info().$currentView)
+    struct PreviewHost: View {
+        @State private var currentView: Info.InfoNavigationEnum = .imprint
+
+        var body: some View {
+            ImprintView(currentView: $currentView)
+        }
+    }
+
+    return PreviewHost()
 }

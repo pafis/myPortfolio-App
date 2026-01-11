@@ -7,39 +7,55 @@
 
 import SwiftUI
 
-import SwiftUI
-
-/// This is the LicensesView
 struct LicensesView: View {
-    /// The current view binding
     @Binding var currentView: Info.InfoNavigationEnum
 
+    private var licenseText: AttributedString? {
+        RTFResourceLoader.loadAttributedString(named: "Licenses")
+    }
+
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Button(action: {
-                    withAnimation {
-                        currentView = .main
-                    }
-                }) {
-                    Image(systemName: "chevron.left").padding(.trailing, 2)
-                    Text("Back")
+                Button {
+                    withAnimation { currentView = .main }
+                } label: {
+                    Label("Back", systemImage: "chevron.left")
+                        .font(.headline)
                 }
-                .padding()
-                .foregroundColor(.primary)
+                .buttonStyle(.plain)
 
-            }.padding(.bottom, 5)
-            TileDetailsView(title: "Licenses") {
-                let licenseText = try? NSAttributedString(url: Bundle.main.url(forResource: "Licenses", withExtension: "rtf")!, options: [:], documentAttributes: nil)
-
-                let a = try? AttributedString(licenseText ?? NSAttributedString(string: ""), including: \.uiKit)
-
-                Text(a ?? "").padding(10)
+                Spacer()
             }
+
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Licenses")
+                    .font(.system(.title2, design: .rounded).bold())
+
+                if let licenseText {
+                    Text(licenseText)
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .lineSpacing(4)
+                } else {
+                    Text("License content not available.")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .glassyCard(cornerRadius: 32, padding: 20)
         }
     }
 }
 
 #Preview {
-    LicensesView(currentView: Info().$currentView)
+    struct PreviewHost: View {
+        @State private var currentView: Info.InfoNavigationEnum = .licenses
+
+        var body: some View {
+            LicensesView(currentView: $currentView)
+        }
+    }
+
+    return PreviewHost()
 }
